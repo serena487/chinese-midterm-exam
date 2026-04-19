@@ -144,6 +144,46 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕','Malgun Gothic',sans-seri
 .wrong-ans-py{font-family:var(--mono);font-size:12px;color:var(--accent)}
 .retry-row{display:flex;gap:10px;margin-top:20px;justify-content:center;flex-wrap:wrap}
 
+/* ── 단원 선택 ── */
+.lesson-chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.lchip{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);
+  background:none;color:var(--muted);font-family:'Noto Sans KR',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.lchip:hover{border-color:var(--accent);color:var(--accent)}
+.lchip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.lchip.all-on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* ── 기록 탭 ── */
+.tab-row{display:flex;border-bottom:1.5px solid var(--border);margin-bottom:20px}
+.tab-btn{padding:10px 20px;border:none;background:none;font-family:'Noto Sans KR',sans-serif;
+  font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;
+  border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:all .2s}
+.tab-btn.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── 기록 화면 ── */
+.record-screen{display:none;max-width:800px;margin:0 auto;padding:24px 20px}
+.record-screen.active{display:block}
+.rec-empty{text-align:center;padding:60px 0;color:var(--muted)}
+.rec-empty .rei{font-size:48px;margin-bottom:12px}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:16px}
+.rec-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.rec-date{font-size:11px;color:var(--muted);margin-bottom:8px}
+.rec-score{font-size:28px;font-weight:700;color:var(--accent)}
+.rec-total{font-size:12px;color:var(--muted)}
+.rec-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.rec-tag{font-size:10px;padding:2px 8px;border-radius:20px;
+  background:var(--accent-l);color:var(--accent);font-weight:700}
+.rec-pct{font-size:13px;font-weight:700;margin-top:6px}
+.rec-clear{background:none;border:1.5px solid var(--border);border-radius:8px;
+  padding:8px 16px;font-family:'Noto Sans KR',sans-serif;font-size:12px;
+  color:var(--muted);cursor:pointer;margin-top:16px}
+.rec-clear:hover{border-color:var(--red);color:var(--red)}
+.rec-best{display:flex;gap:12px;margin-bottom:16px}
+.rb-item{flex:1;background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:12px;text-align:center}
+.rb-n{font-size:22px;font-weight:700;color:var(--gold)}
+.rb-l{font-size:10px;color:var(--muted);margin-top:2px}
+
 /* scrollbar */
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -163,6 +203,10 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕','Malgun Gothic',sans-seri
   <div>
     <div class="header-title">중회화 중간고사 대비</div>
     <div class="header-sub" id="headerSub">1과 ~ 7과 전체 범위</div>
+  </div>
+  <div class="tab-row" id="mainTabs">
+    <button class="tab-btn on" onclick="switchTab('exam',this)">📝 시험</button>
+    <button class="tab-btn" onclick="switchTab('record',this)">📊 나의 기록</button>
   </div>
   <div class="hud" id="hudArea" style="display:none">
     <div class="hud-item"><div class="hud-n" id="hudQ">0/0</div><div class="hud-l">문제</div></div>
@@ -224,6 +268,19 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕','Malgun Gothic',sans-seri
     </div>
   </div>
 
+  <div class="section-label" style="margin-top:20px">단원 선택 (복수 선택 가능)</div>
+  <div class="lesson-chips" id="lessonChips">
+    <button class="lchip all-on" data-lesson="all" onclick="toggleLesson('all',this)">전체</button>
+    <button class="lchip on" data-lesson="1과" onclick="toggleLesson('1과',this)">1과</button>
+    <button class="lchip on" data-lesson="2과" onclick="toggleLesson('2과',this)">2과</button>
+    <button class="lchip on" data-lesson="3과" onclick="toggleLesson('3과',this)">3과</button>
+    <button class="lchip on" data-lesson="4과" onclick="toggleLesson('4과',this)">4과</button>
+    <button class="lchip on" data-lesson="5과" onclick="toggleLesson('5과',this)">5과</button>
+    <button class="lchip on" data-lesson="6과" onclick="toggleLesson('6과',this)">6과</button>
+    <button class="lchip on" data-lesson="7과" onclick="toggleLesson('7과',this)">7과</button>
+    <button class="lchip on" data-lesson="부록" onclick="toggleLesson('부록',this)">부록</button>
+  </div>
+
   <div class="section-label" style="margin-top:20px">문제 수</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <button class="type-btn selected" data-count="20" onclick="selectCount(20,this)" style="padding:10px 16px;flex:1;min-width:80px"><span>20문제</span></button>
@@ -233,6 +290,16 @@ body{font-family:'Apple SD Gothic Neo','맑은 고딕','Malgun Gothic',sans-seri
   </div>
 
   <button class="start-btn" id="startBtn" onclick="startExam()">시험 시작하기 →</button>
+</div>
+
+<!-- RECORD SCREEN -->
+<div class="record-screen" id="recordScreen">
+  <div class="rec-best" id="recBest"></div>
+  <div class="section-label">최근 시험 기록</div>
+  <div id="recList"></div>
+  <div style="text-align:center;margin-top:16px">
+    <button class="rec-clear" onclick="clearRecords()">🗑 기록 모두 삭제</button>
+  </div>
 </div>
 
 <!-- QUESTION SCREEN -->
@@ -359,6 +426,265 @@ const ALL = [
 {zh:"不但味道好得很，而且价钱十分便宜，服务也挺周到的。",ko:"맛도 정말 좋고, 가격도 매우 저렴하고, 서비스도 꽤 꼼꼼하고 친절해요.",pinyin:"Búdàn wèidao hǎo de hěn, érqiě jiàqian shífēn piányí, fúwù yě tǐng zhōudào de.",lesson:"7과",level:2,words:["不但", "味道", "好得很", "而且", "价钱", "十分", "便宜", "服务", "也", "挺", "周到的"]},
 {zh:"妈妈，他虽然是外国人，但是他愿意尊重咱们的民族习惯。",ko:"엄마, 그 사람이 비록 외국인이긴 해도 우리 민족의 풍습을 기꺼이 존중해요.",pinyin:"Māma, tā suīrán shì wàiguórén, dànshì tā yuànyì zūnzhòng zánmen de mínzú xíguàn.",lesson:"7과",level:3},
 {zh:"我现在身体还不错，没什么大病，我要多尝些没尝过的东西，多去些好玩的地方看看。",ko:"지금은 몸도 꽤 건강하고 큰 병도 없으니, 아직 못 먹어본 것도 더 먹어보고 재밌는 곳도 더 구경하러 다닐 거예요.",pinyin:"Wǒ xiànzài shēntǐ hái búcuò, méi shénme dà bìng, wǒ yào duō cháng xiē méi cháng guò de dōngxi, duō qù xiē hǎowán de dìfang kànkan.",lesson:"7과",level:3},
+
+// ── 1과 추가 ──
+{zh:"有几位新同学，欢迎你们！",ko:"새로운 동기들이 몇 명 있어요, 환영해요!",pinyin:"Yǒu jǐ wèi xīn tóngxué, huānyíng nǐmen!",lesson:"1과",level:1},
+{zh:"老师，我们已经认识了。",ko:"선생님, 저희는 이미 알고 있어요.",pinyin:"Lǎoshī, wǒmen yǐjīng rènshi le.",lesson:"1과",level:1},
+{zh:"是吗？给我介绍介绍。",ko:"그래요? 저한테 소개해 줘요.",pinyin:"Shì ma? Gěi wǒ jièshào jièshào.",lesson:"1과",level:1},
+{zh:"我叫山田有美，日本人，请您多多关照。",ko:"저는 야마다 유미라고 해요, 일본인이에요, 앞으로 잘 부탁드립니다.",pinyin:"Wǒ jiào Shāntián Yǒuměi, Rìběnrén, qǐng nín duōduō guānzhào.",lesson:"1과",level:1},
+{zh:"下边谁接着说？",ko:"다음은 누가 이어서 말할 건가요?",pinyin:"Xiàbiān shéi jiēzhe shuō?",lesson:"1과",level:1},
+{zh:"你的名字？",ko:"당신 이름은요?",pinyin:"Nǐ de míngzi?",lesson:"1과",level:1},
+{zh:"咱们班怎么样？",ko:"우리 반은 어때요?",pinyin:"Zánmen bān zěnmeyàng?",lesson:"1과",level:1},
+{zh:"我回来啦，安妮。",ko:"나 돌아왔어, 안니.",pinyin:"Wǒ huílái la, Ānnī.",lesson:"1과",level:1},
+{zh:"玩儿得一定很开心吧？",ko:"정말 즐겁게 놀았겠죠?",pinyin:"Wánr de yīdìng hěn kāixīn ba?",lesson:"1과",level:1},
+{zh:"当然啦，可有意思了。",ko:"당연하죠, 정말 재미있었어요.",pinyin:"Dāngrán la, kě yǒuyìsi le.",lesson:"1과",level:1},
+{zh:"我看看，你好像比以前瘦了，也黑了，不过更精神了。",ko:"어디 보자, 예전보다 살이 좀 빠지고 피부도 탔지만, 오히려 더 활기차 보여요.",pinyin:"Wǒ kànkan, nǐ hǎoxiàng bǐ yǐqián shòu le, yě hēi le, búguò gèng jīngshén le.",lesson:"1과",level:2},
+{zh:"别光说我了，你寒假过得怎么样？家里都好吧？",ko:"저 얘기만 하지 말고, 겨울방학은 어떻게 보냈어요? 집안은 다 잘 있죠?",pinyin:"Bié guāng shuō wǒ le, nǐ hánjià guò de zěnmeyàng? Jiā lǐ dōu hǎo ba?",lesson:"1과",level:2},
+{zh:"都好，谢谢。",ko:"다 잘 있어요, 고마워요.",pinyin:"Dōu hǎo, xièxie.",lesson:"1과",level:1},
+{zh:"对了，这是我家乡的特产，是我爸爸妈妈给你的。我们还向你问好呢。",ko:"참, 이건 우리 고향 특산물이에요, 저희 부모님이 당신에게 주라고 하신 거예요. 안부도 전하래요.",pinyin:"Duìle, zhè shì wǒ jiāxiāng de tèchǎn, shì wǒ bàba māma gěi nǐ de. Wǒmen hái xiàng nǐ wènhǎo ne.",lesson:"1과",level:2},
+{zh:"你父母真好！",ko:"부모님이 정말 좋은 분들이네요!",pinyin:"Nǐ fùmǔ zhēn hǎo!",lesson:"1과",level:1},
+{zh:"对了，昨天我碰见杰夫了。他说，你回来以后，大家聚聚。",ko:"참, 어제 제프를 우연히 만났어요. 그는 당신이 돌아오면 다들 모이자고 했어요.",pinyin:"Duìle, zuótiān wǒ pèngjiàn Jiéfū le. Tā shuō, nǐ huílái yǐhòu, dàjiā jùjù.",lesson:"1과",level:2},
+{zh:"杰夫，好久不见了。你寒假回国了，还是旅行去了？",ko:"제프, 오랜만이에요. 겨울방학에 귀국했어요, 아니면 여행 갔어요?",pinyin:"Jiéfū, hǎojiǔ bú jiàn le. Nǐ hánjià huíguó le, háishi lǚxíng qù le?",lesson:"1과",level:2},
+{zh:"都不是。我哪儿也没去。",ko:"둘 다 아니에요. 저는 아무 데도 안 갔어요.",pinyin:"Dōu bú shì. Wǒ nǎr yě méi qù.",lesson:"1과",level:1},
+{zh:"那么长的假期，哪儿也没去？",ko:"그렇게 긴 방학인데 아무 데도 안 갔어요?",pinyin:"Nàme cháng de jiàqī, nǎr yě méi qù?",lesson:"1과",level:1},
+{zh:"你？当老师？",ko:"당신이요? 선생님을요?",pinyin:"Nǐ? Dāng lǎoshī?",lesson:"1과",level:1},
+{zh:"感觉怎么样？",ko:"느낌이 어때요?",pinyin:"Gǎnjué zěnmeyàng?",lesson:"1과",level:1},
+{zh:"又辛苦有快乐。",ko:"힘들기도 하고 즐겁기도 해요.",pinyin:"Yòu xīnkǔ yǒu kuàilè.",lesson:"1과",level:1},
+{zh:"看我，把这个忘了。",ko:"이것 봐요, 이걸 깜빡했네요.",pinyin:"Kàn wǒ, bǎ zhège wàng le.",lesson:"1과",level:1},
+{zh:"走，我介绍你们认识认识。",ko:"가요, 제가 서로 소개해 드릴게요.",pinyin:"Zǒu, wǒ jièshào nǐmen rènshi rènshi.",lesson:"1과",level:1},
+// ── 2과 추가 ──
+{zh:"走，看球去。",ko:"가요, 경기 보러 가요.",pinyin:"Zǒu, kàn qiú qù.",lesson:"2과",level:1},
+{zh:"哪儿有球赛？",ko:"어디서 경기해요?",pinyin:"Nǎr yǒu qiúsài?",lesson:"2과",level:1},
+{zh:"学校足球场。",ko:"학교 축구장이요.",pinyin:"Xuéxiào zúqiú chǎng.",lesson:"2과",level:1},
+{zh:"谁跟谁比？",ko:"누구 대 누구 경기예요?",pinyin:"Shéi gēn shéi bǐ?",lesson:"2과",level:1},
+{zh:"国际队对校队。",ko:"국제팀 대 교내팀이에요.",pinyin:"Guójìduì duì xiàoduì.",lesson:"2과",level:1},
+{zh:"国际队？",ko:"국제팀이요?",pinyin:"Guójìduì?",lesson:"2과",level:1},
+{zh:"是啊。有外国留学生组成的队，他们踢得挺好的。",ko:"네. 외국 유학생들로 구성된 팀인데, 꽤 잘 차요.",pinyin:"Shì a. Yǒu wàiguó liúxuéshēng zǔchéng de duì, tāmen tī de tǐng hǎo de.",lesson:"2과",level:2},
+{zh:"能赢校队吗？",ko:"교내팀을 이길 수 있을까요?",pinyin:"Néng yíng xiàoduì ma?",lesson:"2과",level:1},
+{zh:"比赛开始了，国际队加油！",ko:"경기가 시작됐어요, 국제팀 파이팅!",pinyin:"Bǐsài kāishǐ le, guójìduì jiāyóu!",lesson:"2과",level:1},
+{zh:"七号摔倒了，快爬起来呀。",ko:"7번이 넘어졌어요, 빨리 일어나요.",pinyin:"Qī hào shuāi dǎo le, kuài pá qǐlái ya.",lesson:"2과",level:2},
+{zh:"没事，你看他挺轻松地站起来了。",ko:"괜찮아요, 봐요 꽤 가뿐하게 일어났잖아요.",pinyin:"Méishì, nǐ kàn tā tǐng qīngsōng de zhàn qǐlái le.",lesson:"2과",level:2},
+{zh:"十三号怎么推人呢？",ko:"13번이 왜 사람을 밀어요?",pinyin:"Shísān hào zěnme tuī rén ne?",lesson:"2과",level:1},
+{zh:"裁判给了他一张黄牌儿。",ko:"심판이 그에게 옐로카드를 줬어요.",pinyin:"Cáipàn gěi le tā yī zhāng huángpáir.",lesson:"2과",level:2},
+{zh:"罚得好。好球！进了！",ko:"잘 됐어요. 슛! 들어갔어요!",pinyin:"Fá de hǎo. Hǎo qiú! Jìn le!",lesson:"2과",level:1},
+{zh:"听，好像有人敲门。",ko:"들어봐요, 누가 문 두드리는 것 같아요.",pinyin:"Tīng, hǎoxiàng yǒu rén qiāo mén.",lesson:"2과",level:1},
+{zh:"快去看看。",ko:"빨리 가서 봐요.",pinyin:"Kuài qù kànkan.",lesson:"2과",level:1},
+{zh:"我母亲病了，需要安静。",ko:"저희 어머니가 아프셔서 조용히 해야 해요.",pinyin:"Wǒ mǔqīn bìng le, xūyào ānjìng.",lesson:"2과",level:1},
+{zh:"真对不起，影响你母亲休息了。",ko:"정말 죄송해요, 어머니 쉬시는 데 방해가 됐네요.",pinyin:"Zhēn duìbuqǐ, yǐngxiǎng nǐ mǔqīn xiūxi le.",lesson:"2과",level:2},
+{zh:"咱们俩一样，都是球迷。",ko:"우리 둘 다 똑같이 축구 팬이네요.",pinyin:"Zánmen liǎ yīyàng, dōu shì qiúmí.",lesson:"2과",level:1},
+{zh:"现在几比几了？",ko:"지금 몇 대 몇이에요?",pinyin:"Xiànzài jǐ bǐ jǐ le?",lesson:"2과",level:1},
+{zh:"我的女朋友是拉拉队的队长。",ko:"제 여자친구가 응원단 단장이에요.",pinyin:"Wǒ de nǚpéngyou shì lālāduì de duìzhǎng.",lesson:"2과",level:1},
+{zh:"有了她们的热情支持，比赛的时候，我们更有精神了，今天的比赛就是这样。",ko:"그녀들의 열정적인 응원 덕분에 경기할 때 더욱 힘이 났어요, 오늘 경기가 바로 그랬어요.",pinyin:"Yǒu le tāmen de rèqíng zhīchí, bǐsài de shíhou, wǒmen gèng yǒu jīngshén le, jīntiān de bǐsài jiù shì zhèyàng.",lesson:"2과",level:3},
+{zh:"开始的时候，大家很紧张，都怕输掉比赛。",ko:"처음에는 다들 너무 긴장해서 경기에서 질까봐 두려워했어요.",pinyin:"Kāishǐ de shíhou, dàjiā hěn jǐnzhāng, dōu pà shū diào bǐsài.",lesson:"2과",level:2},
+{zh:"这时候，我听见了拉拉队员们的加油声'国际队一定赢！'",ko:"바로 그때 응원단원들의 '국제팀 반드시 이겨라!'라는 응원 소리가 들려왔어요.",pinyin:"Zhè shíhou, wǒ tīngjiàn le lālāduìyuánmen de jiāyóu shēng 'Guójìduì yīdìng yíng!'",lesson:"2과",level:3},
+{zh:"离比赛结束还有最后一分钟的时候，我们队又踢进了一个球！",ko:"경기가 끝나기까지 마지막 1분이 남았을 때, 우리 팀이 또 한 골을 넣었어요!",pinyin:"Lí bǐsài jiéshù hái yǒu zuìhòu yī fēnzhōng de shíhou, wǒmen duì yòu tī jìn le yī ge qiú!",lesson:"2과",level:3},
+{zh:"2比1，我们队赢了！",ko:"2 대 1로 우리 팀이 이겼어요!",pinyin:"Èr bǐ yī, wǒmen duì yíng le!",lesson:"2과",level:1},
+// ── 3과 추가 ──
+{zh:"师傅，这车到动物园吗？",ko:"기사님, 이 차 동물원에 가나요?",pinyin:"Shīfu, zhè chē dào dòngwùyuán ma?",lesson:"3과",level:1},
+{zh:"下了车，到马路对面坐车。",ko:"차에서 내려서 도로 맞은편에서 타세요.",pinyin:"Xià le chē, dào mǎlù duìmiàn zuò chē.",lesson:"3과",level:2},
+{zh:"劳驾，麻烦你听一下儿车。",ko:"실례합니다, 죄송한데 차를 잠깐만 세워주세요.",pinyin:"Láojià, máfan nǐ tīng yīxiàr chē.",lesson:"3과",level:2},
+{zh:"我做错车了，快让我下去吧！",ko:"저 반대 차를 탔어요, 빨리 내려주세요!",pinyin:"Wǒ zuò cuò chē le, kuài ràng wǒ xià qù ba!",lesson:"3과",level:2},
+{zh:"怎么这么晚才回来？",ko:"왜 이렇게 늦게 돌아왔어요?",pinyin:"Zěnme zhème wǎn cái huílái?",lesson:"3과",level:1},
+{zh:"什么？出什么事了？",ko:"뭐라고요? 무슨 일이 있었어요?",pinyin:"Shénme? Chū shénme shì le?",lesson:"3과",level:1},
+{zh:"没伤着人吧？",ko:"사람은 다치지 않았죠?",pinyin:"Méi shāng zháo rén ba?",lesson:"3과",level:1},
+{zh:"没有。",ko:"없어요.",pinyin:"Méiyǒu.",lesson:"3과",level:1},
+{zh:"以后小心点吧。",ko:"앞으로는 조심해요.",pinyin:"Yǐhòu xiǎoxīn diǎn ba.",lesson:"3과",level:1},
+{zh:"你应该好好记住：'高高兴兴上班去，平平安安回家来。'好让我们每天都放心哪。",ko:"잘 기억해 둬야 해요: '즐겁게 출근하고, 무사히 귀가한다.' 우리가 매일 안심할 수 있게요.",pinyin:"Nǐ yīnggāi hǎohǎo jìzhu: 'Gāogāo xìngxìng shàngbān qù, píngpíng ān'ān huí jiā lái.' Hǎo ràng wǒmen měitiān dōu fàngxīn na.",lesson:"3과",level:3},
+{zh:"大爷，我就放两分钟，到这座楼里找个人，马上就出来。",ko:"어르신, 저는 딱 2분만이에요, 이 건물 안에서 사람 좀 찾고 바로 나올게요.",pinyin:"Dàyé, wǒ jiù fàng liǎng fēnzhōng, dào zhè zuò lóu lǐ zhǎo ge rén, mǎshàng jiù chūlái.",lesson:"3과",level:2},
+{zh:"那也不行啊。",ko:"그래도 안 돼요.",pinyin:"Nà yě bù xíng a.",lesson:"3과",level:1},
+{zh:"要是有汽车开过来，碰倒了，碰坏了，怪谁呀？",ko:"만약 자동차가 지나오다가 부딪혀 쓰러지거나 망가지면, 누구 탓이에요?",pinyin:"Yàoshi yǒu qìchē kāi guòlái, pèng dǎo le, pèng huài le, guài shéi ya?",lesson:"3과",level:3},
+{zh:"您还是放存车处吧，大家都方便，谢谢您了。",ko:"그래도 보관소에 두시는 게 낫겠어요, 모두에게 편하거든요, 감사합니다.",pinyin:"Nín háishi fàng cúnchē chù ba, dàjiā dōu fāngbiàn, xièxie nín le.",lesson:"3과",level:2},
+{zh:"不好意思，大爷，您别说了。",ko:"죄송해요, 어르신, 더 말씀 안 하셔도 돼요.",pinyin:"Bù hǎoyìsi, dàyé, nín bié shuō le.",lesson:"3과",level:1},
+{zh:"我听您的，立刻就放到存车处去。",ko:"말씀대로 할게요, 지금 바로 보관소에 갖다 놓을게요.",lesson:"3과",level:2,
+pinyin:"Wǒ tīng nín de, lìkè jiù fàng dào cúnchē chù qù."},
+{zh:"今天下午，本市又发生了一起交通事故。",ko:"오늘 오후 시내에서 또 교통사고가 한 건 발생했습니다.",pinyin:"Jīntiān xiàwǔ, běn shì yòu fāshēng le yī qǐ jiāotōng shìgù.",lesson:"3과",level:2},
+{zh:"一个汽车司机酒后开车，闯了红灯撞了一辆从南往北开的公共汽车，结果一人重伤，两人轻伤。",ko:"한 자동차 운전자가 음주운전을 하다가 빨간불을 무시하고 남쪽에서 북쪽으로 가는 버스를 들이받아, 결국 한 명이 중상을 입고 두 명이 경상을 입었습니다.",pinyin:"Yī ge qìchē sījī jiǔhòu kāichē, chuǎng le hóngdēng zhuàng le yī liàng cóng nán wǎng běi kāi de gōnggòng qìchē, jiéguǒ yī rén zhòngshāng, liǎng rén qīngshāng.",lesson:"3과",level:3},
+// ── 4과 추가 ──
+{zh:"快说，咱们吃什么？服务员等着呢。",ko:"빨리 말해요, 우리 뭐 먹을 거예요? 종업원이 기다리고 있어요.",pinyin:"Kuài shuō, zánmen chī shénme? Fúwùyuán děng zhe ne.",lesson:"4과",level:1},
+{zh:"来个尖椒牛肉吧。",ko:"청양고추 쇠고기 볶음 하나 주문해요.",pinyin:"Lái ge jiānjiāo niúròu ba.",lesson:"4과",level:1},
+{zh:"好，辣的，我爱吃。",ko:"좋아요, 매운 거요, 저 좋아해요.",pinyin:"Hǎo, là de, wǒ ài chī.",lesson:"4과",level:1},
+{zh:"我想要个炒蘑菇。再来个鱼吧。",ko:"저는 버섯볶음을 원해요. 생선 요리도 하나 더 시켜요.",pinyin:"Wǒ xiǎng yào ge chǎo mógu. Zài lái ge yú ba.",lesson:"4과",level:1},
+{zh:"我从小就不爱吃鱼。不论怎么做，我都不爱吃。",ko:"저는 어릴 때부터 생선을 좋아하지 않아요. 어떻게 만들어도 입에 안 맞아요.",pinyin:"Wǒ cóngxiǎo jiù bú ài chī yú. Bùlùn zěnme zuò, wǒ dōu bú ài chī.",lesson:"4과",level:1},
+{zh:"这儿的鱼不错，尝一次，也许你就爱吃了。来一个吧。",ko:"여기 생선이 맛있어요, 한번 먹어봐요, 어쩌면 좋아하게 될지도 몰라요. 하나 시켜요.",pinyin:"Zhèr de yú búcuò, cháng yī cì, yěxǔ nǐ jiù ài chī le. Lái yī ge ba.",lesson:"4과",level:2},
+{zh:"现在吃，还来得及吗？",ko:"지금 먹으면 아직 늦지 않았을까요?",pinyin:"Xiànzài chī, hái láidejí ma?",lesson:"4과",level:1},
+{zh:"好吧，陪你们吃，来一个就来一个吧。",ko:"그래요, 여러분 먹는 데 같이 끼워줘요, 하나 시키죠 뭐.",pinyin:"Hǎo ba, péi nǐmen chī, lái yī ge jiù lái yī ge ba.",lesson:"4과",level:2},
+{zh:"三个菜，够了，再来三杯可乐。",ko:"요리 세 가지면 충분해요, 콜라 세 잔 더 주세요.",pinyin:"Sān ge cài, gòu le, zài lái sān bēi kělè.",lesson:"4과",level:1},
+{zh:"主食要什么？",ko:"주식은 뭘로 드릴까요?",pinyin:"Zhǔshí yào shénme?",lesson:"4과",level:1},
+{zh:"一人一碗米饭吧。",ko:"한 사람당 밥 한 공기씩 해요.",pinyin:"Yī rén yī wǎn mǐfàn ba.",lesson:"4과",level:1},
+{zh:"我现在又渴又饿。",ko:"저는 지금 목도 마르고 배도 고파요.",pinyin:"Wǒ xiànzài yòu kě yòu è.",lesson:"4과",level:1},
+{zh:"服务员，麻烦您快点儿行吗？",ko:"종업원, 좀 빨리 해주실 수 있나요?",pinyin:"Fúwùyuán, máfan nín kuài diǎnr xíng ma?",lesson:"4과",level:1},
+{zh:"是啊，明天就是一个节日。",ko:"네, 내일이 바로 명절이에요.",pinyin:"Shì a, míngtiān jiù shì yī ge jiérì.",lesson:"4과",level:1},
+{zh:"什么节？",ko:"무슨 명절이에요?",pinyin:"Shénme jié?",lesson:"4과",level:1},
+{zh:"放假吗？",ko:"쉬어요?",pinyin:"Fàng jià ma?",lesson:"4과",level:1},
+{zh:"放。那天家家都吃粽子。",ko:"쉬어요. 그날은 집집마다 쫑즈를 먹어요.",pinyin:"Fàng. Nà tiān jiājiā dōu chī zòngzi.",lesson:"4과",level:1},
+{zh:"什么是粽子？",ko:"쫑즈가 뭐예요?",pinyin:"Shénme shì zòngzi?",lesson:"4과",level:1},
+{zh:"粽子嘛，这样吧，我奶奶年年都包，明天你去我家，咱们一起包，一起吃。",ko:"쫑즈 말이에요, 이렇게 해요, 우리 할머니가 매년 만드시거든요, 내일 우리 집에 와서 같이 만들고 같이 먹어요.",pinyin:"Zòngzi ma, zhèyàng ba, wǒ nǎinai niánnián dōu bāo, míngtiān nǐ qù wǒ jiā, zánmen yīqǐ bāo, yīqǐ chī.",lesson:"4과",level:3},
+{zh:"我从来没吃过粽子，真好吃！",ko:"쫑즈를 먹어본 적이 없었는데, 정말 맛있어요!",pinyin:"Wǒ cónglái méi chī guò zòngzi, zhēn hǎo chī!",lesson:"4과",level:1},
+{zh:"好吃也得少吃点儿，还有好多菜呢。",ko:"맛있어도 조금만 먹어요, 요리가 아직 많이 남았어요.",pinyin:"Hǎo chī yě děi shǎo chī diǎnr, hái yǒu hǎo duō cài ne.",lesson:"4과",level:2},
+{zh:"刚才咱们都在包粽子，是谁做了这么多菜？",ko:"방금까지 우리 모두 쫑즈를 만들고 있었는데, 이 많은 요리는 누가 만들었어요?",pinyin:"Gāngcái zánmen dōu zài bāo zòngzi, shì shéi zuò le zhème duō cài?",lesson:"4과",level:2},
+{zh:"是我叫的外卖。",ko:"제가 배달 음식을 시킨 거예요.",pinyin:"Shì wǒ jiào de wàimài.",lesson:"4과",level:1},
+{zh:"叫外卖？好办法！",ko:"배달 음식을요? 좋은 생각이에요!",pinyin:"Jiào wàimài? Hǎo bànfǎ!",lesson:"4과",level:1},
+// ── 5과 추가 ──
+{zh:"你怎么又迟到了？看看表，都几点了？",ko:"어떻게 또 지각이에요? 시계 좀 봐요, 지금 몇 시예요?",pinyin:"Nǐ zěnme yòu chídào le? Kànkan biǎo, dōu jǐ diǎn le?",lesson:"5과",level:1},
+{zh:"实在对不起！",ko:"정말 죄송해요!",pinyin:"Shízài duìbuqǐ!",lesson:"5과",level:1},
+{zh:"打辆的吧，又碰上堵车。你说倒霉不倒霉？",ko:"택시를 잡아탔더니 또 교통 체증에 걸리고 말았어요. 이게 재수 없는 거 아니에요?",pinyin:"Dǎ liàng dī ba, yòu pèng shàng dǔ chē. Nǐ shuō dǎoméi bù dǎoméi?",lesson:"5과",level:2},
+{zh:"你总是有那么多理由。",ko:"당신은 왜 이렇게 매번 핑계가 많아요.",pinyin:"Nǐ zǒngshì yǒu nàme duō lǐyóu.",lesson:"5과",level:1},
+{zh:"好了，别生气了，原谅我吧。下回……",ko:"알았어요, 이제 화 풀어요, 제발 용서해줘요. 다음번엔…",pinyin:"Hǎo le, bié shēngqì le, yuánliàng wǒ ba. Xià huí……",lesson:"5과",level:1},
+{zh:"每次约会你都迟到，下回谁还相信你呀？你以为我有的是时间等你呀？",ko:"매번 데이트마다 늦으면서, 다음에 누가 당신을 믿겠어요? 내가 당신을 기다릴 시간이 넘쳐나는 줄 알아요?",pinyin:"Měi cì yuēhuì nǐ dōu chídào, xià huí shéi hái xiāngxìn nǐ ya? Nǐ yǐwéi wǒ yǒude shì shíjiān děng nǐ ya?",lesson:"5과",level:3},
+{zh:"别动！快拿镜子来！",ko:"움직이지 말아요! 빨리 거울 가져와요!",pinyin:"Bié dòng! Kuài ná jìngzi lái!",lesson:"5과",level:1},
+{zh:"干什么？",ko:"왜요?",pinyin:"Gàn shénme?",lesson:"5과",level:1},
+{zh:"照照你生气的样子，可好看了。",ko:"화난 당신 모습 좀 봐요, 정말 볼만하네요.",pinyin:"Zhàozhao nǐ shēngqì de yàngzi, kě hǎokàn le.",lesson:"5과",level:2},
+{zh:"你呀……",ko:"당신은 정말…",pinyin:"Nǐ ya……",lesson:"5과",level:1},
+{zh:"怎么还不睡呀？",ko:"왜 아직 안 자요?",pinyin:"Zěnme hái bù shuì ya?",lesson:"5과",level:1},
+{zh:"我给我妈写了封E-mail，告诉她我有男朋友了。",ko:"엄마한테 이메일을 썼어요, 남자친구가 생겼다고 알려드렸어요.",pinyin:"Wǒ gěi wǒ mā xiě le fēng E-mail, gàosu tā wǒ yǒu nánpéngyou le.",lesson:"5과",level:2},
+{zh:"告诉她以后，我又有担心。",ko:"알려드린 다음에 또 걱정이 생겼어요.",pinyin:"Gàosu tā yǐhòu, wǒ yòu yǒu dānxīn.",lesson:"5과",level:1},
+{zh:"她一定为你高兴，你担心什么呢？",ko:"분명 당신 때문에 기뻐하실 텐데, 뭐가 걱정이에요?",pinyin:"Tā yīdìng wèi nǐ gāoxìng, nǐ dānxīn shénme ne?",lesson:"5과",level:2},
+{zh:"她高兴我知道。可是我担心的是另一方面。",ko:"엄마가 기뻐하실 거라는 건 알아요. 하지만 제가 걱정하는 건 다른 면이에요.",pinyin:"Tā gāoxìng wǒ zhīdào. Kěshì wǒ dānxīn de shì lìng yīfāngmiàn.",lesson:"5과",level:2},
+{zh:"哪方面？",ko:"어떤 면이요?",pinyin:"Nǎ fāngmiàn?",lesson:"5과",level:1},
+{zh:"你没听说过'爱是不分国界的'吗？重要的是你们俩真心相爱。",ko:"'사랑은 국경이 없다'는 말을 들어본 적 없어요? 중요한 건 두 사람이 진심으로 사랑하는 거예요.",pinyin:"Nǐ méi tīngshuō guò 'ài shì bù fēn guójiè de' ma? Zhòngyào de shì nǐmen liǎ zhēnxīn xiāng'ài.",lesson:"5과",level:3},
+{zh:"虽然文化不同，习惯也不同，可是你们俩在一起，不是很幸福吗？",ko:"비록 문화도 다르고 습관도 다르지만, 두 사람이 함께 있으면 행복하지 않나요?",pinyin:"Suīrán wénhuà bùtóng, xíguàn yě bùtóng, kěshì nǐmen liǎ zài yīqǐ, bú shì hěn xìngfú ma?",lesson:"5과",level:3},
+{zh:"这就够了，不要管别人怎么想。",ko:"그걸로 충분해요, 다른 사람이 어떻게 생각하는지는 신경 쓰지 말아요.",pinyin:"Zhè jiù gòu le, bú yào guǎn biérén zěnme xiǎng.",lesson:"5과",level:2},
+{zh:"可是我妈不是别人哪！",ko:"하지만 우리 엄마는 남이 아니잖아요!",pinyin:"Kěshì wǒ mā bú shì biérén na!",lesson:"5과",level:2},
+{zh:"你应该想办法让她明白：他是你最理想的爱人，你们俩在一起真的很合适，光担心是不能解决问题的。",ko:"방법을 생각해서 엄마를 이해시켜야 해요: 그가 당신의 가장 이상적인 배우자이고, 두 사람이 함께하면 정말 잘 어울린다는 것을요, 걱정만 해서는 문제를 해결할 수 없어요.",pinyin:"Nǐ yīnggāi xiǎng bànfǎ ràng tā míngbai: tā shì nǐ zuì lǐxiǎng de àirén, nǐmen liǎ zài yīqǐ zhēn de hěn héshì, guāng dānxīn shì bù néng jiějué wèntí de.",lesson:"5과",level:3},
+{zh:"你说得对，今年暑假我一定带他去见见我妈。我相信他会得满分。",ko:"당신 말이 맞아요, 올 여름방학에는 꼭 그를 데리고 가서 엄마께 인사시킬 거예요. 그가 만점을 받을 거라 믿어요.",pinyin:"Nǐ shuō de duì, jīnnián shǔjià wǒ yīdìng dài tā qù jiànjiàn wǒ mā. Wǒ xiāngxìn tā huì dé mǎnfēn.",lesson:"5과",level:3},
+// ── 6과 추가 ──
+{zh:"你怎么能发现的？",ko:"어떻게 알게 됐어요?",pinyin:"Nǐ zěnme néng fāxiàn de?",lesson:"6과",level:1},
+{zh:"每天不论早上还是傍晚，在公园里，总能看见跳舞的老人，他们穿得红红绿绿的，挺有意思。",ko:"매일 아침이든 저녁이든 공원에서 알록달록하게 차려입고 춤추는 노인들을 늘 볼 수 있어요, 꽤 재미있어요.",pinyin:"Měitiān bùlùn zǎoshang háishi bàngwǎn, zài gōngyuán lǐ, zǒng néng kànjiàn tiàowǔ de lǎorén, tāmen chuān de hónghóng lǜlǜ de, tǐng yǒuyìsi.",lesson:"6과",level:3},
+{zh:"老人也不是人人都爱跳舞。很多爱动的老人，更喜欢爬爬山，散散步什么的。",ko:"노인들이 모두 춤추기를 좋아하는 건 아니에요. 활동적인 노인들 중 많은 분들은 산에 오르거나 산책하는 걸 더 좋아해요.",pinyin:"Lǎorén yě bú shì rénrén dōu ài tiàowǔ. Hěn duō ài dòng de lǎorén, gèng xǐhuan páa pá shān, sàn san bù shénme de.",lesson:"6과",level:3},
+{zh:"不爱动的老人做什么？",ko:"활동을 좋아하지 않는 노인들은 뭘 해요?",pinyin:"Bú ài dòng de lǎorén zuò shénme?",lesson:"6과",level:1},
+{zh:"有的画画儿，练练书法，有的帮儿女带带孩子。",ko:"어떤 분들은 그림을 그리거나 서예를 연습하고, 어떤 분들은 자녀들이 아이 돌보는 걸 도와줘요.",pinyin:"Yǒude huà huàr, liànlian shūfǎ, yǒude bāng érnǚ dài dai háizi.",lesson:"6과",level:2},
+{zh:"我看，爱动不爱动都不重要，重要的是心不能老，心一老比什么都可怕。",ko:"제 생각엔, 활동적이든 아니든 다 상관없어요, 중요한 건 마음만은 늙어선 안 된다는 거예요, 마음이 늙으면 그 무엇보다 무섭거든요.",pinyin:"Wǒ kàn, ài dòng bú ài dòng dōu bú zhòngyào, zhòngyào de shì xīn bù néng lǎo, xīn yī lǎo bǐ shénme dōu kěpà.",lesson:"6과",level:3},
+{zh:"对。我常常看到外国的老人来中国旅游，年纪那么大了，头发都白了，可是精神非常好，让谁看了都羡慕。",ko:"맞아요. 저는 외국 노인들이 중국으로 여행 오는 걸 자주 봐요, 그렇게 연세가 많고 머리카락도 다 세었지만 정말 기운이 넘쳐서 누가 봐도 부러울 정도예요.",pinyin:"Duì. Wǒ chángcháng kàndào wàiguó de lǎorén lái Zhōngguó lǚyóu, niánjì nàme dà le, tóufa dōu bái le, kěshì jīngshén fēicháng hǎo, ràng shéi kàn le dōu xiànmù.",lesson:"6과",level:3},
+{zh:"这样的人当然幸福，不过能出来旅游得并不多。",ko:"그런 분들은 당연히 행복하겠죠, 하지만 그렇게 나와서 여행할 수 있는 분들이 그리 많지는 않아요.",pinyin:"Zhèyàng de rén dāngrán xìngfú, búguò néng chūlái lǚyóu de bìng bù duō.",lesson:"6과",level:2},
+{zh:"有。但是有的老人不愿意去，他们觉得在哪儿也不如在家好。",ko:"있어요. 하지만 어떤 노인들은 가기 싫어해요, 어디를 가도 집보다 좋은 곳은 없다고 생각하거든요.",pinyin:"Yǒu. Dànshì yǒude lǎorén bù yuànyì qù, tāmen juéde zài nǎr yě bùrú zài jiā hǎo.",lesson:"6과",level:2},
+{zh:"妈妈，您怎么哭了？",ko:"엄마, 왜 우세요?",pinyin:"Māma, nín zěnme kū le?",lesson:"6과",level:1},
+{zh:"没什么，是刚才看电视看的。",ko:"아무것도 아니에요, 아까 TV 보다 그랬어요.",pinyin:"Méi shénme, shì gāngcái kàn diànshì kàn de.",lesson:"6과",level:1},
+{zh:"什么电视让您这么感动？",ko:"어떤 TV 프로그램이 이렇게 감동적이에요?",pinyin:"Shénme diànshì ràng nín zhème gǎndòng?",lesson:"6과",level:1},
+{zh:"电视里说：有一位老人，她丈夫死了好多年了。她辛辛苦苦把孩子们都养大了。",ko:"TV에서 이런 내용이 나왔어요: 한 노인이 있었는데, 남편이 오래전에 세상을 떠났어요. 그녀는 고생스럽게 아이들을 다 키워냈어요.",pinyin:"Diànshì lǐ shuō: yǒu yī wèi lǎorén, tā zhàngfu sǐ le hǎo duō nián le. Tā xīnxīnkǔkǔ bǎ háizimen dōu yǎng dà le.",lesson:"6과",level:3},
+{zh:"有一位老先生对她好，想和她组成新的家庭，可是儿女们都反对，她受不了，结果自杀了。",ko:"한 노신사가 그녀를 잘 대해주고 새로운 가정을 꾸리고 싶어했는데, 자녀들이 모두 반대해서 그녀가 견디지 못하고 결국 스스로 목숨을 끊었어요.",pinyin:"Yǒu yī wèi lǎo xiānsheng duì tā hǎo, xiǎng hé tā zǔchéng xīn de jiātíng, kěshì érnǚmen dōu fǎnduì, tā shòu bu liǎo, jiéguǒ zìshā le.",lesson:"6과",level:3},
+{zh:"他们的儿女怎么不多为父母想想，他们不希望父母幸福吗？",ko:"자녀들이 왜 부모 입장에서 좀 더 생각해 주지 않는 건가요, 부모가 행복하길 바라지 않는 건가요?",pinyin:"Tāmen de érnǚ zěnme bù duō wèi fùmǔ xiǎngxiang, tāmen bù xīwàng fùmǔ xìngfú ma?",lesson:"6과",level:3},
+{zh:"是啊，真能理解老人的年轻人不多呀。",ko:"맞아요, 노인들을 진정으로 이해하는 젊은이가 많지 않아요.",pinyin:"Shì a, zhēn néng lǐjiě lǎorén de niánqīngrén bù duō ya.",lesson:"6과",level:2},
+{zh:"说到这儿，我正有件事要跟您商量呢。",ko:"그 얘기가 나왔으니, 마침 어머니와 의논할 일이 하나 있어요.",pinyin:"Shuō dào zhèr, wǒ zhèng yǒu jiàn shì yào gēn nín shāngliang ne.",lesson:"6과",level:2},
+{zh:"什么事？这么认真的样子。",ko:"무슨 일이에요? 이렇게 진지한 표정으로.",pinyin:"Shénme shì? Zhème rènzhēn de yàngzi.",lesson:"6과",level:1},
+{zh:"人家刘伯伯对您那么好，经常关心和照顾您，对您也有那个意思，您怎么不考虑考虑？",ko:"류 아저씨가 어머니한테 그렇게 잘 해주시고, 항상 관심 가져주시고 돌봐주시고, 그 마음도 있으신데, 왜 한번 생각해 보지 않으세요?",pinyin:"Rénjiā Liú bóbo duì nín nàme hǎo, jīngcháng guānxīn hé zhàogù nín, duì nín yě yǒu nà ge yìsi, nín zěnme bù kǎolǜ kǎolǜ?",lesson:"6과",level:3},
+{zh:"这个，我知道他的意思，可是……",ko:"그건, 그분 마음은 알아요, 하지만……",pinyin:"Zhège, wǒ zhīdào tā de yìsi, kěshì……",lesson:"6과",level:1},
+{zh:"您担心什么呀？",ko:"뭐가 걱정이세요?",pinyin:"Nín dānxīn shénme ya?",lesson:"6과",level:1},
+{zh:"我是担心你有想法。我觉得有你就够了。",ko:"네가 어떻게 생각할까봐 걱정이야. 나는 네가 있으면 충분해.",pinyin:"Wǒ shì dānxīn nǐ yǒu xiǎngfǎ. Wǒ juéde yǒu nǐ jiù gòu le.",lesson:"6과",level:2},
+{zh:"还有别人怎么看呢？",ko:"그리고 다른 사람들이 어떻게 볼지도 신경 쓰이고요.",pinyin:"Hái yǒu biérén zěnme kàn ne?",lesson:"6과",level:1},
+// ── 7과 추가 ──
+{zh:"回家看爸妈。",ko:"집에 가서 부모님 뵈러요.",pinyin:"Huí jiā kàn bàmā.",lesson:"7과",level:1},
+{zh:"你好像每个周末都回去。",ko:"매주 주말마다 돌아가는 것 같네요.",pinyin:"Nǐ hǎoxiàng měi ge zhōumò dōu huí qù.",lesson:"7과",level:1},
+{zh:"是啊，大家在一起热闹。",ko:"네, 다 같이 있으면 왁자지껄 즐거워요.",pinyin:"Shì a, dàjiā zài yīqǐ rènao.",lesson:"7과",level:1},
+{zh:"做做饭，看看电视，收拾收拾房间，饭桌上一起聊聊天儿。",ko:"밥도 같이 짓고, TV도 보고, 방도 치우고, 밥상에 둘러앉아 도란도란 얘기도 나눠요.",pinyin:"Zuòzuo fàn, kànkan diànshì, shōushi shōushi fángjiān, fànzhuō shàng yīqǐ liáoliao tiānr.",lesson:"7과",level:2},
+{zh:"不想自己轻松轻松？",ko:"혼자서 좀 편하게 쉬고 싶지 않아요?",pinyin:"Bù xiǎng zìjǐ qīngsōng qīngsōng?",lesson:"7과",level:1},
+{zh:"想是想，可是一想起他们在家里等着，就不好意思自己玩儿去了。",ko:"그러고 싶긴 한데, 부모님이 집에서 기다리고 계신다고 생각하면 혼자 놀러 가기가 미안해요.",pinyin:"Xiǎng shì xiǎng, kěshì yī xiǎngqǐ tāmen zài jiā lǐ děng zhe, jiù bù hǎoyìsi zìjǐ wánr qù le.",lesson:"7과",level:3},
+{zh:"大家一起出去玩儿也可以呀。",ko:"다 같이 나가서 놀면 되잖아요.",pinyin:"Dàjiā yīqǐ chūqu wánr yě kěyǐ ya.",lesson:"7과",level:1},
+{zh:"你说得有道理，可是他们觉得这样花钱不值得。",ko:"당신 말도 맞아요, 하지만 부모님은 그렇게 돈 쓰는 게 가치 없다고 생각하세요.",pinyin:"Nǐ shuō de yǒu dàolǐ, kěshì tāmen juéde zhèyàng huā qián bù zhíde.",lesson:"7과",level:2},
+{zh:"可能是吧。",ko:"그럴 수도 있겠죠.",pinyin:"Kěnéng shì ba.",lesson:"7과",level:1},
+{zh:"那你就在家待着吗？",ko:"그럼 그냥 집에서만 있는 거예요?",pinyin:"Nà nǐ jiù zài jiā dāi zhe ma?",lesson:"7과",level:1},
+{zh:"我觉得，和他们一起过周末，常常能学到一些书本上学不到的东西，也挺有收获的。",ko:"제 생각에는, 부모님과 함께 주말을 보내면 교과서에서는 배울 수 없는 것들을 배울 수 있어서 꽤 보람 있어요.",pinyin:"Wǒ juéde, hé tāmen yīqǐ guò zhōumò, chángcháng néng xué dào yīxiē shūběn shàng xué bú dào de dōngxi, yě tǐng yǒu shōuhuò de.",lesson:"7과",level:3},
+{zh:"马上就洗完了。",ko:"곧 다 빨아요.",pinyin:"Mǎshàng jiù xǐ wán le.",lesson:"7과",level:1},
+{zh:"你先去吃水果吧，知道你回来，我已经给你准备好了。",ko:"먼저 가서 과일 먹어요, 당신 온다는 거 알고 미리 준비해 뒀어요.",pinyin:"Nǐ xiān qù chī shuǐguǒ ba, zhīdào nǐ huílái, wǒ yǐjīng gěi nǐ zhǔnbèi hǎo le.",lesson:"7과",level:2},
+{zh:"您怎么不用洗衣机洗呀？",ko:"왜 세탁기를 안 쓰세요?",pinyin:"Nín zěnme bú yòng xǐyījī xǐ ya?",lesson:"7과",level:1},
+{zh:"那买洗衣机有什么用？",ko:"그럼 세탁기를 사서 뭐 해요?",pinyin:"Nà mǎi xǐyījī yǒu shénme yòng?",lesson:"7과",level:1},
+{zh:"我用手洗惯了，洗几件衣服还是锻炼身体呢。",ko:"손으로 빠는 게 익숙해져서요, 옷 몇 벌 빠는 것도 운동이 된다고요.",pinyin:"Wǒ yòng shǒu xǐ guàn le, xǐ jǐ jiàn yīfu háishi duànliàn shēntǐ ne.",lesson:"7과",level:2},
+{zh:"要不，您就得听我的了。",ko:"아니면 어머니도 제 말을 들으셔야 할 거예요.",pinyin:"Yàobù, nín jiù děi tīng wǒ de le.",lesson:"7과",level:2},
+{zh:"你周末怎么过的？",ko:"주말을 어떻게 보냈어요?",pinyin:"Nǐ zhōumò zěnme guò de?",lesson:"7과",level:1},
+{zh:"星期六和妻子、孩子一起回家看父母，星期天三口出去玩儿。",ko:"토요일에는 아내, 아이와 함께 부모님 뵈러 집에 갔고, 일요일에는 세 식구가 나가서 놀았어요.",pinyin:"Xīngqīliù hé qīzi, háizi yīqǐ huí jiā kàn fùmǔ, xīngqītiān sān kǒu chūqu wánr.",lesson:"7과",level:2},
+{zh:"安排得不错嘛。你去哪儿玩儿了？",ko:"계획을 잘 세웠네요. 어디 가서 놀았어요?",pinyin:"Ānpái de búcuò ma. Nǐ qù nǎr wánr le?",lesson:"7과",level:1},
+{zh:"上午去了动物园，下午去附近的商场逛了逛。",ko:"오전에는 동물원에 갔고, 오후에는 근처 백화점을 둘러봤어요.",pinyin:"Shàngwǔ qù le dòngwùyuán, xiàwǔ qù fùjìn de shāngchǎng guàng le guàng.",lesson:"7과",level:2},
+{zh:"春节是我爷爷八十岁生日，我们全家都回老家了。在那儿过春节比在北京热闹多了。",ko:"춘절이 우리 할아버지 팔순 생신이어서 온 가족이 고향으로 돌아갔어요. 거기서 춘절을 보내는 게 베이징보다 훨씬 더 활기차고 떠들썩해요.",pinyin:"Chūnjié shì wǒ yéye bāshí suì shēngrì, wǒmen quánjiā dōu huí lǎojiā le. Zài nàr guò Chūnjié bǐ zài Běijīng rènao duō le.",lesson:"7과",level:3},
+{zh:"我就进去点了一菜一汤，不但味道好得很，而且价钱十分便宜，服务也挺周到的。",ko:"들어가서 요리 하나에 국 하나를 시켰는데, 맛도 정말 좋고, 가격도 매우 저렴하고, 서비스도 꽤 꼼꼼하고 친절해요.",pinyin:"Wǒ jiù jìnqù diǎn le yī cài yī tāng, búdàn wèidao hǎo de hěn, érqiě jiàqian shífēn piányí, fúwù yě tǐng zhōudào de.",lesson:"7과",level:2},
+{zh:"后来我又去过很多次，回回满意。",ko:"나중에 또 여러 번 갔는데, 갈 때마다 만족스러웠어요.",pinyin:"Hòulái wǒ yòu qù guò hěn duō cì, huí huí mǎnyì.",lesson:"7과",level:2},
+{zh:"还有，就是他受过很好的教育，人好，心好，性格好，周围的朋友也都不错。",ko:"게다가 그는 좋은 교육을 받았고, 사람도 좋고, 마음씨도 좋고, 성격도 좋고, 주변 친구들도 다 괜찮아요.",pinyin:"Hái yǒu, jiù shì tā shòu guò hěn hǎo de jiàoyù, rén hǎo, xīn hǎo, xìnggé hǎo, zhōuwéi de péngyou yě dōu búcuò.",lesson:"7과",level:3},
+{zh:"见了面，您就会相信他确实是个值得我爱的人。",ko:"만나보시면 그가 정말 제가 사랑할 만한 사람이라는 걸 믿게 되실 거예요.",pinyin:"Jiàn le miàn, nín jiù huì xiāngxìn tā quèshí shì ge zhíde wǒ ài de rén.",lesson:"7과",level:3},
+{zh:"要是等老得走不动了，牙也掉光了，再用这些钱打针，吃药，住医院，那多没意思呀？",ko:"만약 늙어서 걸어 다니지도 못하게 되고, 이도 다 빠진 다음에 그 돈으로 주사 맞고 약 먹고 병원 입원하면, 그게 얼마나 재미없겠어요?",pinyin:"Yàoshi děng lǎo de zǒu bú dòng le, yá yě diào guāng le, zài yòng zhèxiē qián dǎzhēn, chī yào, zhù yīyuàn, nà duō méi yìsi ya?",lesson:"7과",level:3},
+// ── 문법 예문 (부록) ──
+{zh:"快把窗户关上。",ko:"빨리 창문 닫아요.",pinyin:"Kuài bǎ chuānghù guān shàng.",lesson:"부록",level:1},
+{zh:"快把手洗干净。",ko:"빨리 손 깨끗이 씻어요.",pinyin:"Kuài bǎ shǒu xǐ gānjìng.",lesson:"부록",level:1},
+{zh:"快把酒打开。",ko:"빨리 술 열어요.",pinyin:"Kuài bǎ jiǔ dǎ kāi.",lesson:"부록",level:1},
+{zh:"我以为你知道周末聚会的事。",ko:"당신이 주말 모임에 대해 알고 있는 줄 알았어요.",pinyin:"Wǒ yǐwéi nǐ zhīdào zhōumò jùhuì de shì.",lesson:"부록",level:2},
+{zh:"我以为他已经走了。",ko:"그가 이미 떠난 줄 알았어요.",pinyin:"Wǒ yǐwéi tā yǐjīng zǒu le.",lesson:"부록",level:1},
+{zh:"我以为她给你们介绍过。",ko:"그녀가 당신들에게 소개해 준 줄 알았어요.",pinyin:"Wǒ yǐwéi tā gěi nǐmen jièshào guò.",lesson:"부록",level:2},
+{zh:"病得一定很厉害吧？",ko:"병이 꽤 심했겠죠?",pinyin:"Bìng de yīdìng hěn lìhai ba?",lesson:"부록",level:1},
+{zh:"吃得一定很满意吧？",ko:"먹는 게 정말 만족스러웠겠죠?",pinyin:"Chī de yīdìng hěn mǎnyì ba?",lesson:"부록",level:1},
+{zh:"看得一定很清楚吧？",ko:"아주 잘 보였겠죠?",pinyin:"Kàn de yīdìng hěn qīngchǔ ba?",lesson:"부록",level:1},
+{zh:"我什么也没说。",ko:"저는 아무 말도 안 했어요.",pinyin:"Wǒ shénme yě méi shuō.",lesson:"부록",level:1},
+{zh:"我谁也不认识。",ko:"저는 아무도 몰라요.",pinyin:"Wǒ shéi yě bú rènshi.",lesson:"부록",level:1},
+{zh:"我哪个也没买。",ko:"저는 아무것도 안 샀어요.",pinyin:"Wǒ nǎ ge yě méi mǎi.",lesson:"부록",level:1},
+{zh:"这个大学是由二十几个系组成的。",ko:"이 대학은 20여 개 학과로 구성되어 있어요.",pinyin:"Zhège dàxué shì yóu èrshí jǐ ge xì zǔchéng de.",lesson:"부록",level:2},
+{zh:"那个大公司是由几个小公司组成的。",ko:"그 대기업은 몇 개의 소규모 회사로 구성되어 있어요.",pinyin:"Nàge dà gōngsī shì yóu jǐ ge xiǎo gōngsī zǔchéng de.",lesson:"부록",level:2},
+{zh:"中国是由五十六个民族组成的。",ko:"중국은 56개 민족으로 구성되어 있어요.",pinyin:"Zhōngguó shì yóu wǔshíliù ge mínzú zǔchéng de.",lesson:"부록",level:2},
+{zh:"谁水平高谁水平低让他们比一比就知道了。",ko:"누구 수준이 높고 낮은지 그들끼리 한번 겨루면 알 수 있어요.",pinyin:"Shéi shuǐpíng gāo shéi shuǐpíng dī ràng tāmen bǐ yi bǐ jiù zhīdào le.",lesson:"부록",level:3},
+{zh:"谁学得好谁学得差他们的老师最了解了。",ko:"누가 잘 배우고 누가 못 배우는지 그들의 선생님이 가장 잘 알아요.",pinyin:"Shéi xué de hǎo shéi xué de chà tāmen de lǎoshī zuì liǎojiě le.",lesson:"부록",level:3},
+{zh:"谁该罚谁不该罚都得听裁判的。",ko:"누구를 벌줘야 하고 누구는 안 되는지 심판의 말을 따라야 해요.",pinyin:"Shéi gāi fá shéi bù gāi fá dōu děi tīng cáipàn de.",lesson:"부록",level:3},
+{zh:"实在抱歉，我忘了告诉你。",ko:"정말 죄송해요, 알려드리는 걸 깜빡했어요.",pinyin:"Shízài bàoqiàn, wǒ wàng le gàosu nǐ.",lesson:"부록",level:1},
+{zh:"实在抱歉，您的车我还没修好。",ko:"정말 죄송해요, 손님 차를 아직 다 고치지 못했어요.",pinyin:"Shízài bàoqiàn, nín de chē wǒ hái méi xiū hǎo.",lesson:"부록",level:1},
+{zh:"实在抱歉，我的手机没电了。",ko:"정말 죄송해요, 제 휴대폰 배터리가 없어요.",pinyin:"Shízài bàoqiàn, wǒ de shǒujī méi diàn le.",lesson:"부록",level:1},
+{zh:"女儿和妈妈一样，都是大夫。",ko:"딸도 엄마처럼 모두 의사예요.",pinyin:"Nǚér hé māma yīyàng, dōu shì dàifu.",lesson:"부록",level:1},
+{zh:"我和你一样，都是影迷。",ko:"저도 당신처럼 영화 팬이에요.",pinyin:"Wǒ hé nǐ yīyàng, dōu shì yǐngmí.",lesson:"부록",level:1},
+{zh:"我们大学和北大一样，都是有名的大学。",ko:"우리 대학도 베이징대학처럼 유명한 대학이에요.",pinyin:"Wǒmen dàxué hé Běidà yīyàng, dōu shì yǒumíng de dàxué.",lesson:"부록",level:2},
+{zh:"劳驾，麻烦您让一让，我要下车。",ko:"실례합니다, 좀 비켜주세요, 저 내려야 해요.",pinyin:"Láojià, máfan nín ràng yi ràng, wǒ yào xià chē.",lesson:"부록",level:1},
+{zh:"劳驾，麻烦您帮我换点儿零钱。",ko:"실례합니다, 잔돈 좀 바꿔주실 수 있나요?",pinyin:"Láojià, máfan nín bāng wǒ huàn diǎnr língqián.",lesson:"부록",level:1},
+{zh:"劳驾，麻烦您开一下门。",ko:"실례합니다, 문 좀 열어주세요.",pinyin:"Láojià, máfan nín kāi yīxià mén.",lesson:"부록",level:1},
+{zh:"不请假不准看球赛。",ko:"휴가를 신청하지 않으면 경기를 봐서는 안 돼요.",pinyin:"Bù qǐngjià bù zhǔn kàn qiúsài.",lesson:"부록",level:2},
+{zh:"不办手续不准换班。",ko:"수속을 밟지 않으면 반을 바꿀 수 없어요.",pinyin:"Bù bàn shǒuxù bù zhǔn huàn bān.",lesson:"부록",level:2},
+{zh:"不洗手不准吃东西。",ko:"손을 씻지 않으면 음식을 먹을 수 없어요.",pinyin:"Bù xǐ shǒu bù zhǔn chī dōngxi.",lesson:"부록",level:1},
+{zh:"不好意思，不是我不愿意参加。",ko:"미안해요, 제가 참가하기 싫어서가 아니에요.",pinyin:"Bù hǎoyìsi, bú shì wǒ bù yuànyì cānjiā.",lesson:"부록",level:2},
+{zh:"开个玩笑，不是我们不欢迎你。",ko:"농담이에요, 우리가 당신을 환영하지 않는 게 아니에요.",pinyin:"Kāi ge wánxiào, bú shì wǒmen bù huānyíng nǐ.",lesson:"부록",level:2},
+{zh:"我也不了解，不是我不告诉你。",ko:"저도 몰라요, 제가 말하기 싫어서가 아니에요.",pinyin:"Wǒ yě bù liǎojiě, bú shì wǒ bù gàosu nǐ.",lesson:"부록",level:2},
+{zh:"我想找个中国朋友，好练习汉语。",ko:"중국 친구를 사귀고 싶어요, 중국어 연습을 하려고요.",pinyin:"Wǒ xiǎng zhǎo ge Zhōngguó péngyou, hǎo liànxí Hànyǔ.",lesson:"부록",level:2},
+{zh:"多复习复习，好顺利通过。",ko:"복습을 많이 해서 무사히 통과해요.",pinyin:"Duō fùxí fùxí, hǎo shùnlì tōngguò.",lesson:"부록",level:2},
+{zh:"我记一下你的手机号码，好常联系。",ko:"당신 휴대폰 번호 기록해 둘게요, 자주 연락하려고요.",pinyin:"Wǒ jì yīxià nǐ de shǒujī hàomǎ, hǎo cháng liánxì.",lesson:"부록",level:2},
+{zh:"不论刮风下雨，他都骑自行车上班。",ko:"비가 오나 바람이 부나 그는 항상 자전거로 출근해요.",pinyin:"Bùlùn guā fēng xià yǔ, tā dōu qí zìxíngchē shàngbān.",lesson:"부록",level:2},
+{zh:"不论有没有课，她都七点半起床。",ko:"수업이 있든 없든 그녀는 항상 7시 반에 일어나요.",pinyin:"Bùlùn yǒu méiyǒu kè, tā dōu qī diǎn bàn qǐchuáng.",lesson:"부록",level:2},
+{zh:"不论什么颜色，孩子都喜欢。",ko:"무슨 색깔이든 아이는 다 좋아해요.",pinyin:"Bùlùn shénme yánsè, háizi dōu xǐhuan.",lesson:"부록",level:1},
+{zh:"下午没有课，逛一下就逛一下吧。",ko:"오후에 수업이 없으니 구경 좀 하면 하는 거죠 뭐.",pinyin:"Xiàwǔ méiyǒu kè, guàng yīxià jiù guàng yīxià ba.",lesson:"부록",level:2},
+{zh:"他说不饿，不吃就不吃吧。",ko:"그가 배 안 고프다고 하니, 안 먹으면 안 먹는 거죠 뭐.",pinyin:"Tā shuō bú è, bù chī jiù bù chī ba.",lesson:"부록",level:2},
+{zh:"大家都累了，休息会儿就休息会儿吧。",ko:"다들 피곤하니 좀 쉬면 쉬는 거죠 뭐.",pinyin:"Dàjiā dōu lèi le, xiūxi huìr jiù xiūxi huìr ba.",lesson:"부록",level:2},
+{zh:"我从来没走过这条路，真远啊！",ko:"이 길은 한 번도 걸어본 적이 없는데, 정말 머네요!",pinyin:"Wǒ cónglái méi zǒu guò zhè tiáo lù, zhēn yuǎn a!",lesson:"부록",level:2},
+{zh:"我从来没遇到过这种事，真生气！",ko:"이런 일은 한 번도 겪어본 적이 없는데, 정말 화나요!",pinyin:"Wǒ cónglái méi yùdào guò zhè zhǒng shì, zhēn shēngqì!",lesson:"부록",level:2},
+{zh:"我从来没办过这样的事，真麻烦！",ko:"이런 일은 한 번도 처리해본 적이 없는데, 정말 번거롭네요!",pinyin:"Wǒ cónglái méi bàn guò zhèyàng de shì, zhēn máfan!",lesson:"부록",level:2},
+{zh:"别睡了，快去上课吧。",ko:"그만 자고 빨리 수업 들으러 가요.",pinyin:"Bié shuì le, kuài qù shàngkè ba.",lesson:"부록",level:1},
+{zh:"别坐着了，快走吧。",ko:"앉아있지 말고 빨리 가요.",pinyin:"Bié zuò zhe le, kuài zǒu ba.",lesson:"부록",level:1},
+{zh:"别开了，快停车吧。",ko:"그만 운전하고 빨리 차 세워요.",pinyin:"Bié kāi le, kuài tíng chē ba.",lesson:"부록",level:1},
+{zh:"办个手续要填好几张表，你说麻烦不麻烦？",ko:"수속 하나 하는 데 몇 장이나 되는 서류를 작성해야 해요, 번거롭지 않아요?",pinyin:"Bàn ge shǒuxù yào tián hǎo jǐ zhāng biǎo, nǐ shuō máfan bù máfan?",lesson:"부록",level:2},
+{zh:"房间里什么都有，你说方便不方便？",ko:"방 안에 뭐든지 다 있어요, 편하지 않아요?",pinyin:"Fángjiān lǐ shénme dōu yǒu, nǐ shuō fāngbiàn bù fāngbiàn?",lesson:"부록",level:2},
+{zh:"想睡到几点就睡到几点，你说舒服不舒服？",ko:"몇 시까지 자고 싶으면 그때까지 자면 되는데, 편하지 않아요?",pinyin:"Xiǎng shuì dào jǐ diǎn jiù shuì dào jǐ diǎn, nǐ shuō shūfu bù shūfu?",lesson:"부록",level:2},
+{zh:"他总是穿得很少。",ko:"그는 항상 얇게 입어요.",pinyin:"Tā zǒngshì chuān de hěn shǎo.",lesson:"부록",level:1},
+{zh:"老师总是笑着回答学生的问题。",ko:"선생님은 항상 웃으면서 학생들의 질문에 답해요.",pinyin:"Lǎoshī zǒngshì xiào zhe huídá xuésheng de wèntí.",lesson:"부록",level:2},
+{zh:"孩子总是喜欢甜的。",ko:"아이들은 항상 달콤한 걸 좋아해요.",pinyin:"Háizi zǒngshì xǐhuan tián de.",lesson:"부록",level:1},
+{zh:"每天早上我都不吃早饭。",ko:"저는 매일 아침을 안 먹어요.",pinyin:"Měitiān zǎoshang wǒ dōu bù chī zǎofàn.",lesson:"부록",level:1},
+{zh:"每年春节他们都回老家过。",ko:"그들은 매년 춘절에 고향에 돌아가서 지내요.",pinyin:"Měi nián Chūnjié tāmen dōu huí lǎojiā guò.",lesson:"부록",level:2},
+{zh:"每个学期学校都有假期。",ko:"매 학기마다 학교에는 방학이 있어요.",pinyin:"Měi ge xuéqī xuéxiào dōu yǒu jiàqī.",lesson:"부록",level:1},
+{zh:"放了假有的是时间去旅行。",ko:"방학이 되면 여행할 시간이 넘쳐나요.",pinyin:"Fàng le jià yǒude shì shíjiān qù lǚxíng.",lesson:"부록",level:2},
+{zh:"在这儿住了几年有的是朋友。",ko:"여기서 몇 년 살다 보면 친구가 넘쳐나요.",pinyin:"Zài zhèr zhù le jǐ nián yǒude shì péngyou.",lesson:"부록",level:2},
+{zh:"解决这个问题有的是办法。",ko:"이 문제를 해결할 방법은 얼마든지 있어요.",pinyin:"Jiějué zhège wèntí yǒude shì bànfǎ.",lesson:"부록",level:2},
+{zh:"睡觉比什么时候都幸福。",ko:"잘 때가 언제보다도 행복해요.",pinyin:"Shuì jiào bǐ shénme shíhou dōu xìngfú.",lesson:"부록",level:2},
+{zh:"互相了解比什么都重要。",ko:"서로 이해하는 게 무엇보다 중요해요.",pinyin:"Hùxiāng liǎojiě bǐ shénme dōu zhòngyào.",lesson:"부록",level:2},
+{zh:"这个节目比哪个节目都精彩。",ko:"이 프로그램이 어떤 프로그램보다도 재미있어요.",pinyin:"Zhège jiémù bǐ nǎ ge jiémù dōu jīngcǎi.",lesson:"부록",level:2},
+{zh:"公共汽车里并不太挤。",ko:"버스 안은 그다지 붐비지 않아요.",pinyin:"Gōnggòng qìchē lǐ bìng bú tài jǐ.",lesson:"부록",level:2},
+{zh:"学习普通话并不难。",ko:"보통화를 배우는 건 결코 어렵지 않아요.",pinyin:"Xuéxí Pǔtōnghuà bìng bù nán.",lesson:"부록",level:2},
+{zh:"我并不相信这样的事。",ko:"저는 이런 일을 전혀 믿지 않아요.",pinyin:"Wǒ bìng bù xiāngxìn zhèyàng de shì.",lesson:"부록",level:2},
+{zh:"干什么事也不如不干事轻松。",ko:"무슨 일을 하는 것도 아무것도 안 하는 것보다 편하지는 않아요.",pinyin:"Gàn shénme shì yě bùrú bù gàn shì qīngsōng.",lesson:"부록",level:3},
+{zh:"住在谁家也不如住在自己家随便。",ko:"누구 집에 있어도 자기 집만큼 편할 수는 없어요.",pinyin:"Zhù zài shéi jiā yě bùrú zhù zài zìjǐ jiā suíbiàn.",lesson:"부록",level:3},
+{zh:"谁做的菜也不如妈妈做的菜好吃。",ko:"누가 만든 음식도 엄마가 만든 음식만큼 맛있지는 않아요.",pinyin:"Shéi zuò de cài yě bùrú māma zuò de cài hǎo chī.",lesson:"부록",level:2},
+{zh:"什么事让您这么着急？",ko:"무슨 일이 이렇게 급하게 만들었나요?",pinyin:"Shénme shì ràng nín zhème zháojí?",lesson:"부록",level:1},
+{zh:"什么人让您这么羡慕？",ko:"어떤 사람이 이렇게 부럽게 만들었나요?",pinyin:"Shénme rén ràng nín zhème xiànmù?",lesson:"부록",level:2},
+{zh:"什么好消息让您这么高兴？",ko:"어떤 좋은 소식이 이렇게 기쁘게 만들었나요?",pinyin:"Shénme hǎo xiāoxi ràng nín zhème gāoxìng?",lesson:"부록",level:2},
+{zh:"我骑惯了。",ko:"저는 (자전거를) 타는 게 익숙해요.",pinyin:"Wǒ qí guàn le.",lesson:"부록",level:1},
+{zh:"我住惯了。",ko:"저는 (여기에) 사는 게 익숙해요.",pinyin:"Wǒ zhù guàn le.",lesson:"부록",level:1},
+{zh:"我写惯了。",ko:"저는 (이렇게) 쓰는 게 익숙해요.",pinyin:"Wǒ xiě guàn le.",lesson:"부록",level:1},
+{zh:"说这样的话有什么用？",ko:"이런 말을 해봤자 무슨 소용이에요?",pinyin:"Shuō zhèyàng de huà yǒu shénme yòng?",lesson:"부록",level:2},
+{zh:"现在后悔有什么用？",ko:"지금 후회해봤자 무슨 소용이에요?",pinyin:"Xiànzài hòuhuǐ yǒu shénme yòng?",lesson:"부록",level:2},
+{zh:"钱再多有什么用？",ko:"돈이 아무리 많아도 무슨 소용이에요?",pinyin:"Qián zài duō yǒu shénme yòng?",lesson:"부록",level:2},
+{zh:"我只好去找别人了。",ko:"할 수 없이 다른 사람을 찾아가야 했어요.",pinyin:"Wǒ zhǐhǎo qù zhǎo biérén le.",lesson:"부록",level:2},
+{zh:"我只好自己解决了。",ko:"할 수 없이 스스로 해결해야 했어요.",pinyin:"Wǒ zhǐhǎo zìjǐ jiějué le.",lesson:"부록",level:2},
+{zh:"我只好周末去了。",ko:"할 수 없이 주말에 가야 했어요.",pinyin:"Wǒ zhǐhǎo zhōumò qù le.",lesson:"부록",level:1},
+{zh:"要不，咱们打的去吧。",ko:"아니면 택시 타고 가요.",pinyin:"Yàobù, zánmen dǎ dī qù ba.",lesson:"부록",level:1},
+{zh:"要不，换一个别的菜吧。",ko:"아니면 다른 요리로 바꿔요.",pinyin:"Yàobù, huàn yī ge bié de cài ba.",lesson:"부록",level:1},
+{zh:"要不，就去附近的商场转转吧。",ko:"아니면 근처 백화점에 가서 구경해요.",pinyin:"Yàobù, jiù qù fùjìn de shāngchǎng zhuǎnzhuǎn ba.",lesson:"부록",level:1},
+
 ];
 
 /* ── BLANK FILL 전용 문장 (빈칸+보기) ── */
@@ -393,7 +719,7 @@ const BLANKS = [
 /* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
-let cfg = { types:['write','blank','pinyin'], level:'easy', count:20 };
+let cfg = { types:['write','blank','pinyin','order'], level:'easy', count:20, lessons:['1과','2과','3과','4과','5과','6과','7과','부록'] };
 let queue = [], curIdx = 0, score = 0, wrongItems = [];
 let levelMap = { easy:1, mid:2, hard:3 };
 
@@ -401,10 +727,12 @@ let levelMap = { easy:1, mid:2, hard:3 };
    UI HELPERS
 ═══════════════════════════════════════════════════ */
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.screen,.record-screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   const inExam = id==='questionScreen';
   document.getElementById('hudArea').style.display = inExam?'flex':'none';
+  // 시험 화면이면 탭 보이기
+  document.getElementById('mainTabs').style.display = id==='questionScreen'?'none':'flex';
 }
 
 function toggleType(t,el){
@@ -433,9 +761,9 @@ function buildQueue(){
 
   if(cfg.types.includes('write')||cfg.types.includes('pinyin')||cfg.types.includes('order')){
     const filtered = ALL.filter(q=>{
-      if(cfg.level==='easy') return q.level===1;
-      if(cfg.level==='mid') return q.level<=2;
-      return true;
+      const levelOk = cfg.level==='easy'?q.level===1:cfg.level==='mid'?q.level<=2:true;
+      const lessonOk = cfg.lessons.includes(q.lesson);
+      return levelOk && lessonOk;
     });
     filtered.forEach(q=>{
       if(cfg.types.includes('write')) pool.push({...q, type:'write'});
@@ -445,9 +773,9 @@ function buildQueue(){
   }
   if(cfg.types.includes('blank')){
     const filtered = BLANKS.filter(q=>{
-      if(cfg.level==='easy') return q.level===1;
-      if(cfg.level==='mid') return q.level<=2;
-      return true;
+      const levelOk = cfg.level==='easy'?q.level===1:cfg.level==='mid'?q.level<=2:true;
+      const lessonOk = cfg.lessons.includes(q.lesson);
+      return levelOk && lessonOk;
     });
     filtered.forEach(q=>pool.push({...q, type:'blank'}));
   }
@@ -795,6 +1123,22 @@ function showResult(){
   document.getElementById('rWrong').textContent=wrongItems.length;
   document.getElementById('rAcc').textContent=pct+'%';
 
+  // localStorage에 기록 저장
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  saveRecord({
+    date:dateStr,
+    score,
+    total,
+    pct,
+    correct:queue.length-wrongItems.length,
+    wrong:wrongItems.length,
+    totalQ:queue.length,
+    lessons:[...new Set(queue.map(q=>q.lesson))].sort(),
+    level:cfg.level==='easy'?'하':cfg.level==='mid'?'중':'상',
+    types:cfg.types,
+  });
+
   let grade='';
   if(pct>=90) grade='🏆 최우수 — 완벽해요!';
   else if(pct>=80) grade='🥇 우수 — 훌륭해요!';
@@ -848,6 +1192,115 @@ function retryWrong(){
   curIdx=0;score=0;wrongItems=[];
   showScreen('questionScreen');
   renderQ();
+}
+
+
+/* ── 단원 선택 ── */
+function toggleLesson(lesson, el){
+  if(lesson==='all'){
+    // 전체 토글
+    const allOn=el.classList.contains('all-on');
+    if(allOn){
+      // 전체 해제
+      document.querySelectorAll('.lchip[data-lesson]').forEach(b=>b.classList.remove('on','all-on'));
+      cfg.lessons=[];
+    } else {
+      // 전체 선택
+      document.querySelectorAll('.lchip[data-lesson]').forEach(b=>b.classList.add('on'));
+      el.classList.add('all-on');
+      cfg.lessons=['1과','2과','3과','4과','5과','6과','7과','부록'];
+    }
+  } else {
+    el.classList.toggle('on');
+    const allBtn=document.querySelector('.lchip[data-lesson="all"]');
+    const selected=[...document.querySelectorAll('.lchip[data-lesson]:not([data-lesson="all"])')].filter(b=>b.classList.contains('on')).map(b=>b.dataset.lesson);
+    cfg.lessons=selected;
+    if(selected.length===7){ allBtn.classList.add('all-on','on'); }
+    else allBtn.classList.remove('all-on','on');
+  }
+  document.getElementById('startBtn').disabled=cfg.types.length===0||cfg.lessons.length===0;
+}
+
+/* ── 탭 전환 ── */
+function switchTab(tab, el){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  // 시험 탭
+  document.getElementById('mainTabs').style.display='flex';
+  if(tab==='exam'){
+    showScreen('startScreen');
+  } else {
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('recordScreen').classList.add('active');
+    document.getElementById('hudArea').style.display='none';
+    renderRecords();
+  }
+}
+
+/* ── localStorage 기록 ── */
+const REC_KEY='zhonghua_records';
+
+function saveRecord(data){
+  let recs=loadRecords();
+  recs.unshift(data); // 최신순
+  if(recs.length>50) recs=recs.slice(0,50); // 최대 50개
+  try{ localStorage.setItem(REC_KEY, JSON.stringify(recs)); }catch(e){}
+}
+
+function loadRecords(){
+  try{
+    const d=localStorage.getItem(REC_KEY);
+    return d?JSON.parse(d):[];
+  }catch(e){ return []; }
+}
+
+function clearRecords(){
+  if(!confirm('기록을 모두 삭제할까요?')) return;
+  localStorage.removeItem(REC_KEY);
+  renderRecords();
+}
+
+function renderRecords(){
+  const recs=loadRecords();
+  const bestEl=document.getElementById('recBest');
+  const listEl=document.getElementById('recList');
+
+  if(recs.length===0){
+    bestEl.innerHTML='';
+    listEl.innerHTML=`<div class="rec-empty"><div class="rei">📭</div><p>아직 시험 기록이 없어요.<br>시험을 먼저 풀어봐요!</p></div>`;
+    return;
+  }
+
+  // 최고기록 계산
+  const pcts=recs.map(r=>r.pct);
+  const bestPct=Math.max(...pcts);
+  const avgPct=Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+  const totalTries=recs.length;
+  bestEl.innerHTML=`
+    <div class="rb-item"><div class="rb-n">${bestPct}%</div><div class="rb-l">최고 정확도</div></div>
+    <div class="rb-item"><div class="rb-n">${avgPct}%</div><div class="rb-l">평균 정확도</div></div>
+    <div class="rb-item"><div class="rb-n">${totalTries}</div><div class="rb-l">총 시험 횟수</div></div>`;
+
+  let html='<div class="rec-grid">';
+  recs.forEach(r=>{
+    const col=r.pct>=80?'var(--green)':r.pct>=60?'var(--gold)':'var(--red)';
+    html+=`<div class="rec-card">
+      <div class="rec-date">${r.date}</div>
+      <div class="rec-score" style="color:${col}">${r.score}</div>
+      <div class="rec-total">/ ${r.total}점</div>
+      <div class="rec-pct" style="color:${col}">${r.pct}% 정확도</div>
+      <div class="rec-tags">
+        ${r.lessons.map(l=>`<span class="rec-tag">${l}</span>`).join('')}
+        <span class="rec-tag" style="background:var(--gold-l);color:var(--gold)">${r.level}</span>
+        ${r.types.map(t=>`<span class="rec-tag" style="background:#f0f0f0;color:#666">${t==='write'?'유형1':t==='blank'?'유형2':t==='pinyin'?'유형3':'유형4'}</span>`).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">
+        정답 ${r.correct} / ${r.totalQ}문제 · 오답 ${r.wrong}문제
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  listEl.innerHTML=html;
 }
 
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}

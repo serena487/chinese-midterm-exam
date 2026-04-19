@@ -154,21 +154,25 @@ function getDoneSents(){
 function getWrongSents(){
   try{ return new Set(JSON.parse(localStorage.getItem(WRONG_KEY)||'[]')); }catch(e){ return new Set(); }
 }
+function normZhKey(zh){
+  // 빈칸(___) 제거, 공백 정규화 → 유형 상관없이 동일한 키
+  return zh.replace(/___/g,'').replace(/\s+/g,'').trim();
+}
 function saveDoneSent(zh){
   try{
-    const s=getDoneSents(); s.add(zh);
+    const s=getDoneSents(); s.add(normZhKey(zh));
     localStorage.setItem(DONE_KEY,JSON.stringify([...s]));
   }catch(e){}
 }
 function saveWrongSent(zh){
   try{
-    const s=getWrongSents(); s.add(zh);
+    const s=getWrongSents(); s.add(normZhKey(zh));
     localStorage.setItem(WRONG_KEY,JSON.stringify([...s]));
   }catch(e){}
 }
-function removeDoneSent(zh){ // 틀리면 done에서 제거
+function removeDoneSent(zh){
   try{
-    const s=getDoneSents(); s.delete(zh);
+    const s=getDoneSents(); s.delete(normZhKey(zh));
     localStorage.setItem(DONE_KEY,JSON.stringify([...s]));
   }catch(e){}
 }
@@ -896,22 +900,22 @@ function buildQueue(){
   let finalPool=pool;
   if(cfg.range==='new'){
     // 안 해본 문장 우선, 없으면 틀렸던 문장, 그 다음 전체
-    const newSents=pool.filter(q=>!done.has(q.zh));
-    const wrongSents=pool.filter(q=>done.has(q.zh)&&wrong.has(q.zh));
-    const doneSents=pool.filter(q=>done.has(q.zh)&&!wrong.has(q.zh));
+    const newSents=pool.filter(q=>!done.has(normZhKey(q.zh)));
+    const wrongSents=pool.filter(q=>done.has(normZhKey(q.zh))&&wrong.has(normZhKey(q.zh)));
+    const doneSents=pool.filter(q=>done.has(normZhKey(q.zh))&&!wrong.has(normZhKey(q.zh)));
     // 우선순위: 새 문장 → 틀린 문장 → 맞은 문장
     finalPool=[...newSents,...wrongSents,...doneSents];
   } else if(cfg.range==='wrong'){
-    const wrongOnly=pool.filter(q=>wrong.has(q.zh));
+    const wrongOnly=pool.filter(q=>wrong.has(normZhKey(q.zh)));
     finalPool=wrongOnly.length>0?wrongOnly:pool; // 틀린 게 없으면 전체
   }
 
   // shuffle (같은 우선순위 내에서만)
   if(cfg.range==='new'){
     // 구간별로 shuffle
-    const newSents=finalPool.filter(q=>!done.has(q.zh));
-    const wrongSents=finalPool.filter(q=>done.has(q.zh)&&wrong.has(q.zh));
-    const doneSents=finalPool.filter(q=>done.has(q.zh)&&!wrong.has(q.zh));
+    const newSents=finalPool.filter(q=>!done.has(normZhKey(q.zh)));
+    const wrongSents=finalPool.filter(q=>done.has(normZhKey(q.zh))&&wrong.has(normZhKey(q.zh)));
+    const doneSents=finalPool.filter(q=>done.has(normZhKey(q.zh))&&!wrong.has(normZhKey(q.zh)));
     const sh=arr=>{for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;};
     finalPool=[...sh(newSents),...sh(wrongSents),...sh(doneSents)];
   } else {
@@ -1042,8 +1046,10 @@ function checkWrite(){
   const inp=document.getElementById('typeIn');
   const ok=normalizeZh(val)===normalizeZh(q.zh);
   inp.classList.add(ok?'ok':'ng');
-  if(!ok){ wrongItems.push({q,type:'write',userAns:val}); disableInput(); showNextBtn(); }
-  else score+=10;
+  if(!ok){
+    saveWrongSent(q.zh); removeDoneSent(q.zh);
+    wrongItems.push({q,type:'write',userAns:val}); disableInput(); showNextBtn();
+  } else score+=10;
   showFb(ok, q, val, null, 'write');
 }
 
@@ -1090,7 +1096,7 @@ function checkPinyin(){
   // diff for feedback
   const diffHtml = buildDiff(val, correct);
   inp.classList.add(ok?'ok':'ng');
-  if(!ok){ wrongItems.push({q,type:'pinyin',userAns:val}); disableInput(); showNextBtn(); }
+  if(!ok){ saveWrongSent(q.zh); removeDoneSent(q.zh); wrongItems.push({q,type:'pinyin',userAns:val}); disableInput(); showNextBtn(); }
   else score+=10;
   showFb(ok, q, val, diffHtml, 'pinyin');
 }
@@ -1103,8 +1109,7 @@ function checkBlank(chosen){
     if(b.textContent===q.answer) b.classList.add('correct');
     else if(b.textContent===chosen&&!ok) b.classList.add('wrong');
   });
-  if(!ok){ wrongItems.push({q,type:'blank',userAns:chosen}); showNextBtn(); }
-  else score+=10;
+  if(!ok){ saveWrongSent(q.zh); removeDoneSent(q.zh); wrongItems.push({q,type:'blank',userAns:chosen}); showNextBtn(); } else score+=10;
   showFb(ok, q, chosen, null, 'blank');
 }
 
@@ -1163,8 +1168,14 @@ function checkOrder(){
   });
   document.querySelectorAll('#wordPool .word-chip').forEach(el=>el.onclick=null);
 
-  if(!ok){ wrongItems.push({q,type:'order',userAns:userWords.join(' ')}); showNextBtn(); }
-  else score+=10;
+  if(!ok){
+    saveWrongSent(q.zh);
+    removeDoneSent(q.zh);
+    wrongItems.push({q,type:'order',userAns:userWords.join(' ')});
+    showNextBtn();
+  } else {
+    score+=10;
+  }
   showFb(ok, q, userWords.join(' '), null, 'order');
 }
 
@@ -1348,21 +1359,25 @@ function getDoneSents(){
 function getWrongSents(){
   try{ return new Set(JSON.parse(localStorage.getItem(WRONG_KEY)||'[]')); }catch(e){ return new Set(); }
 }
+function normZhKey(zh){
+  // 빈칸(___) 제거, 공백 정규화 → 유형 상관없이 동일한 키
+  return zh.replace(/___/g,'').replace(/\s+/g,'').trim();
+}
 function saveDoneSent(zh){
   try{
-    const s=getDoneSents(); s.add(zh);
+    const s=getDoneSents(); s.add(normZhKey(zh));
     localStorage.setItem(DONE_KEY,JSON.stringify([...s]));
   }catch(e){}
 }
 function saveWrongSent(zh){
   try{
-    const s=getWrongSents(); s.add(zh);
+    const s=getWrongSents(); s.add(normZhKey(zh));
     localStorage.setItem(WRONG_KEY,JSON.stringify([...s]));
   }catch(e){}
 }
-function removeDoneSent(zh){ // 틀리면 done에서 제거
+function removeDoneSent(zh){
   try{
-    const s=getDoneSents(); s.delete(zh);
+    const s=getDoneSents(); s.delete(normZhKey(zh));
     localStorage.setItem(DONE_KEY,JSON.stringify([...s]));
   }catch(e){}
 }
@@ -1451,7 +1466,7 @@ function loadRecords(){
 }
 
 function clearRecords(){
-  if(!confirm('시험 기록과 학습 현황을 모두 삭제할까요?')) return;
+  if(!confirm('시험 기록과 학습 현황(풀어본 문장, 틀린 문장)을 모두 삭제할까요?')) return;
   localStorage.removeItem(REC_KEY);
   localStorage.removeItem(DONE_KEY);
   localStorage.removeItem(WRONG_KEY);

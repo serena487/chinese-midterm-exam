@@ -556,14 +556,27 @@ function renderQ(){
 }
 
 /* ── CHECK FUNCTIONS ── */
+function normalizeZh(s){
+  // 중국어 채점 정규화:
+  // 1. 띄어쓰기 제거 (중국어는 띄어쓰기 불필요)
+  // 2. 중국어/영문 구두점 통일 (？=? ！=! 。=. ，=,)
+  // 3. 전각·반각 따옴표 제거
+  return s
+    .replace(/\s+/g,'')
+    .replace(/？/g,'?')
+    .replace(/！/g,'!')
+    .replace(/。/g,'.')
+    .replace(/，/g,',')
+    .replace(/[""''「」『』…、]/g,'')
+    .trim();
+}
+
 function checkWrite(){
   const q=queue[curIdx];
   const val=document.getElementById('typeIn').value.trim();
   if(!val) return;
   const inp=document.getElementById('typeIn');
-  const correct=q.zh.replace(/[。，！？、""''…]/g,'');
-  const userClean=val.replace(/[。，！？、""''…]/g,'');
-  const ok=userClean===correct||val===q.zh;
+  const ok=normalizeZh(val)===normalizeZh(q.zh);
   inp.classList.add(ok?'ok':'ng');
   if(!ok){ wrongItems.push({q,type:'write',userAns:val}); disableInput(); showNextBtn(); }
   else score+=10;
@@ -577,6 +590,7 @@ function normalizePinyin(s){
   //   一: 4성 앞 → yí, 1/2/3성 앞 → yì, 단독 → yī  (채점 시 yī·yí·yì 모두 허용)
   //   → 모두 bu/yi로 통일해서 비교
   let r=s.toLowerCase();
+  r=r.replace(/？/g,'?').replace(/！/g,'!').replace(/。/g,'.').replace(/，/g,',');
   r=r.replace(/[.!?,;:'"]/g,'').replace(/\s+/g,' ').trim();
   // 不 전체 형태 → bu
   r=r.replace(/bú/g,'bu').replace(/bù/g,'bu').replace(/bǔ/g,'bu').replace(/bū/g,'bu');

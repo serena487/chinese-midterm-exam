@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>고급중국어 해석 연습</title>
+<title>고급중국어 시험 연습</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,6 +103,27 @@ textarea:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 
 .nitem .mine { color: var(--seal); }
 .nitem .py { font-family: var(--f-mono); color: var(--accent); }
 .nitem .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.vc-prompt { font-size: 40px; font-family: var(--f-zh); text-align: center; padding: 6px 0; letter-spacing: 2px; }
+.vc-prompt.ko { font-family: var(--f-ui); font-size: 21px; letter-spacing: 0; line-height: 1.5; }
+.step { font-size: 12.5px; color: var(--muted); letter-spacing: .3px; display: flex; gap: 8px; align-items: center; }
+.step b { color: var(--accent); }
+.choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 520px) { .choices { grid-template-columns: minmax(0, 1fr); } }
+.choice { text-align: left; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; padding: 10px 12px; font: 15px/1.45 var(--f-ui); cursor: pointer; display: flex; gap: 10px; align-items: baseline; min-width: 0; }
+.choice:hover:not(:disabled) { border-color: var(--accent); }
+.choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.choice .k { font: 11px var(--f-mono); color: var(--muted); }
+.choice .zh { font-family: var(--f-zh); font-size: 20px; }
+.choice .pyc { font-family: var(--f-mono); font-size: 17px; }
+.choice.right { border-color: var(--ok); background: var(--accent-soft); }
+.choice.wrong { border-color: var(--seal); color: var(--seal); }
+.choice:disabled { cursor: default; }
+.vc-done { font-size: 15px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.vc-done .zh { font-family: var(--f-zh); font-size: 20px; }
+.vc-done .py { font-family: var(--f-mono); color: var(--accent); font-size: 16px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); color: var(--muted); font: 13px var(--f-ui); padding: 4px 10px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .btn.sm { font-size: 12.5px; padding: 5px 10px; }
 footer { font-size: 12px; color: var(--muted); line-height: 1.7; }
 @media (max-width: 480px) { .zh-sent { font-size: 19px; } .card { padding: 16px; } }
@@ -114,10 +135,11 @@ footer { font-size: 12px; color: var(--muted); line-height: 1.7; }
 
 <div class="wrap">
   <header>
-    <h1><span class="zh">高级汉语</span>해석 연습</h1>
+    <h1><span class="zh">高级汉语</span>시험 연습</h1>
     <div class="tabs" role="tablist">
-      <button id="tab-tr" role="tab" aria-selected="true">문장 해석</button>
-      <button id="tab-dz" role="tab" aria-selected="false">다음자</button>
+      <button id="tab-tr" role="tab" aria-selected="true">① 문장 해석</button>
+      <button id="tab-vc" role="tab" aria-selected="false">② 단어</button>
+      <button id="tab-dz" role="tab" aria-selected="false">③ 다음자</button>
       <button id="tab-note" role="tab" aria-selected="false">오답 노트<span class="cnt" id="cnt"></span></button>
     </div>
   </header>
@@ -126,19 +148,21 @@ footer { font-size: 12px; color: var(--muted); line-height: 1.7; }
   <div class="opts" id="opts">
     <label><input type="checkbox" id="opt-shuffle"> 무작위 순서</label>
     <label id="lbl-retry"><input type="checkbox" id="opt-retry"> 오답만 다시 풀기</label>
+    <span class="seg" id="lbl-dir" role="group" aria-label="단어 문제 방향"><button data-d="zk">중→한</button><button data-d="kz">한→중</button><button data-d="mix">섞어서</button></span>
     <label id="lbl-hint"><input type="checkbox" id="opt-hint" checked> 단어 힌트 (점선 단어 누르기)</label>
   </div>
   <div class="progress" id="progress"><span id="pos">1 / 1</span><div class="track"><i id="prog"></i></div></div>
 
   <section id="view-tr" class="card" aria-live="polite"></section>
+  <section id="view-vc" class="card" hidden></section>
   <section id="view-dz" class="card" hidden></section>
   <section id="view-note" hidden></section>
 
   <div class="stats" id="stats"></div>
   <footer>
     참고 해석은 업로드한 과제 파일의 해석을 바탕으로 오역·오타를 일부 다듬은 것입니다. 시험 답안은 수업 시간에 다룬 해석을 우선하세요.<br>
-    오답 노트: 해석에서 ‘애매·다시’를 누른 문장과 다음자에서 틀린 문제가 자동으로 모이고, ‘외웠어요’를 누르면 빠집니다. 기록은 이 브라우저에만 저장됩니다.<br>
-    단축키: <span class="kbd">Ctrl+Enter</span> 해석 보기 · <span class="kbd">1 2 3</span> 채점 · <span class="kbd">← →</span> 이동 (입력창 밖에서)
+    오답 노트: 해석에서 ‘애매·다시’를 누른 문장, 단어·다음자에서 틀린 문제가 자동으로 모이고, ‘외웠어요’를 누르면 빠집니다. 기록은 이 브라우저에만 저장됩니다.<br>
+    단축키: <span class="kbd">Ctrl+Enter</span> 해석 보기 · <span class="kbd">1 2 3</span> 채점 · 단어 문제 <span class="kbd">1~4</span> 선택 · <span class="kbd">← →</span> 이동 (입력창 밖에서)
   </footer>
 </div>
 
@@ -157,6 +181,10 @@ let tab = 'tr', filter = store.get('gj-filter', 'all'), idx = 0, order = [], rev
 const drafts = store.get('gj-drafts', {});   // sentence id -> my translation
 const dzWrong = store.get('gj-dzw', {});      // q index -> my wrong answer
 const missCount = store.get('gj-miss', {});   // id -> times wrong
+const vcMarks = store.get('gj-vc', {});       // 'i:dir' -> 1/0
+const vcWrong = store.get('gj-vcw', {});      // 'i:dir' -> my wrong choices text
+let vcDir = store.get('gj-vcdir', 'mix');
+const vcCache = {};                           // per-item choice sets + progress
 
 const ALL = [];
 DATA.forEach(t => t.items.forEach((it, i) => ALL.push({ ...it, id: t.key + ':' + i, key: t.key, title: t.title, author: t.author, n: i + 1, total: t.items.length })));
@@ -166,7 +194,8 @@ function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.fl
 
 function buildFilters() {
   const f = $('filters');
-  const list = [{ key: 'all', label: '전체', n: ALL.length }].concat(DATA.map(t => ({ key: t.key, label: t.title, n: t.items.length, zh: true })));
+  const cnt = k => tab === 'vc' ? WORDS.filter(w => k === 'all' || w.key === k).length : tab === 'dz' ? DZ.filter(q => k === 'all' || q.key === k).length : ALL.filter(x => k === 'all' || x.key === k).length;
+  const list = [{ key: 'all', label: '전체', n: cnt('all') }].concat(DATA.map(t => ({ key: t.key, label: t.title, n: cnt(t.key), zh: true })));
   f.innerHTML = list.map(o => `<button class="chip" data-k="${o.key}" aria-pressed="${filter === o.key}">${o.zh ? `<span class="zh">${esc(o.label)}</span>` : o.label}<small>${o.n}</small></button>`).join('');
   f.querySelectorAll('.chip').forEach(b => b.onclick = () => { filter = b.dataset.k; store.set('gj-filter', filter); buildFilters(); rebuild(); });
 }
@@ -176,6 +205,16 @@ function pool() {
     let p = ALL.filter(s => filter === 'all' || s.key === filter);
     if ($('opt-retry').checked) p = p.filter(s => marks[s.id] === 'bad' || marks[s.id] === 'mid');
     return p.map(s => s.id);
+  }
+  if (tab === 'vc') {
+    let v = [];
+    WORDS.forEach((w, i) => {
+      if (!(filter === 'all' || w.key === filter)) return;
+      if ($('opt-retry').checked) { ['zk', 'kz'].forEach(d => { if (vcMarks[i + ':' + d] === 0) v.push(i + ':' + d); }); return; }
+      const d = vcDir === 'mix' ? (Math.random() < .5 ? 'zk' : 'kz') : vcDir;
+      v.push(i + ':' + d);
+    });
+    return v;
   }
   let d = DZ.map((q, i) => i).filter(i => filter === 'all' || DZ[i].key === filter);
   if ($('opt-retry').checked) d = d.filter(i => dzMarks[i] === 0);
@@ -299,7 +338,84 @@ function renderDz() {
   setTimeout(() => inp.focus({ preventScroll: true }), 0);
 }
 
+// ---- ② 단어
+const TONES = { a: 'aāáǎà', e: 'eēéěè', i: 'iīíǐì', o: 'oōóǒò', u: 'uūúǔù', 'ü': 'üǖǘǚǜ' };
+const TMAP = {}; Object.entries(TONES).forEach(([b, str]) => [...str].forEach((c, t) => TMAP[c] = [b, t]));
+function toneVariants(py, n) {
+  const chars = [...py], pos = chars.map((c, i) => TMAP[c] && TMAP[c][1] > 0 ? i : -1).filter(i => i >= 0);
+  const out = new Set(); let guard = 0;
+  while (out.size < n && guard++ < 200 && pos.length) {
+    const c2 = chars.slice(); const k = Math.random() < .55 || pos.length === 1 ? 1 : 2;
+    shuffle(pos.slice()).slice(0, k).forEach(p => { const [b, t] = TMAP[chars[p]]; let nt; do { nt = 1 + Math.floor(Math.random() * 4); } while (nt === t); c2[p] = TONES[b][nt]; });
+    const v = c2.join(''); if (v !== py) out.add(v);
+  }
+  return [...out];
+}
+function pickOthers(i, n) {
+  const w = WORDS[i];
+  let cand = WORDS.map((x, j) => j).filter(j => j !== i && WORDS[j].key === w.key && WORDS[j].hz !== w.hz);
+  if (cand.length < n) cand = WORDS.map((x, j) => j).filter(j => j !== i && WORDS[j].hz !== w.hz);
+  return shuffle(cand).slice(0, n);
+}
+function vcItem(k) {
+  if (vcCache[k]) return vcCache[k];
+  const [i, d] = k.split(':'); const w = WORDS[+i];
+  const others = pickOthers(+i, 3);
+  const first = shuffle([{ t: d === 'zk' ? w.kr : w.hz, ok: true }].concat(others.map(j => ({ t: d === 'zk' ? WORDS[j].kr : WORDS[j].hz, ok: false }))));
+  let tv = toneVariants(w.py, 3);
+  if (tv.length < 3) tv = tv.concat(others.map(j => WORDS[j].py)).slice(0, 3);
+  const second = shuffle([{ t: w.py, ok: true }].concat(tv.map(t => ({ t, ok: false }))));
+  return vcCache[k] = { i: +i, d, w, first, second, step: 0, pick1: null, pick2: null };
+}
+function renderVc() {
+  const v = $('view-vc');
+  if (!order.length) { v.innerHTML = `<div class="empty">${$('opt-retry').checked ? '단어 오답이 없습니다. 틀린 단어가 여기에 모입니다.' : '단어가 없습니다.'}</div>`; return; }
+  const k = order[idx], it = vcItem(k), w = it.w, zk = it.d === 'zk';
+  const title = (DATA.find(t => t.key === w.key) || {}).title || w.key;
+  const st = vcMarks[k] === 1 ? '<span class="state ok">● 맞힘</span>' : vcMarks[k] === 0 ? '<span class="state bad">● 틀림</span>' : '';
+  const prompt = zk ? `<div class="vc-prompt">${esc(w.hz)}</div>` : `<div class="vc-prompt ko">${esc(w.kr)}</div>`;
+  const opts = (arr, step, pick) => arr.map((o, n) => {
+    const done = pick !== null; let cls = '';
+    if (done && o.ok) cls = 'right'; else if (done && n === pick) cls = 'wrong';
+    const inner = step === 1 ? `<span class="pyc">${esc(o.t)}</span>` : (zk ? esc(o.t) : `<span class="zh">${esc(o.t)}</span>`);
+    return `<button class="choice ${cls}" data-s="${step}" data-n="${n}" ${done ? 'disabled' : ''}><span class="k">${n + 1}</span>${inner}</button>`;
+  }).join('');
+  let body = `<div class="step"><b>1단계</b> ${zk ? '뜻 고르기' : '한자 고르기'}</div><div class="choices">${opts(it.first, 0, it.pick1)}</div>`;
+  if (it.pick1 !== null) body += `<div class="step"><b>2단계</b> 병음·성조 고르기 ${zk ? '' : `· <span style="font-family:var(--f-zh);font-size:16px;color:var(--ink)">${esc(w.hz)}</span>`}</div><div class="choices">${opts(it.second, 1, it.pick2)}</div>`;
+  if (it.pick2 !== null) {
+    const ok = it.first[it.pick1].ok && it.second[it.pick2].ok;
+    body += `<div class="vc-done verdict ${ok ? 'right' : 'wrong'}"><span class="mark">${ok ? '정답' : '오답'}</span><span class="zh">${esc(w.hz)}</span><span class="py">${esc(w.py)}</span><span>${esc(w.kr)}</span></div>`;
+  }
+  v.innerHTML = `
+    <div class="meta"><span><span class="src">${esc(title)}</span> · ${zk ? '중→한' : '한→중'}</span>${st}</div>
+    ${prompt}${body}
+    <div class="actions"><div class="grp"><button class="btn" id="prev">←</button></div><button class="btn ${it.pick2 !== null ? 'primary' : ''}" id="next">다음 →</button></div>`;
+  v.querySelectorAll('.choice:not(:disabled)').forEach(b => b.onclick = () => vcPick(k, +b.dataset.s, +b.dataset.n));
+  $('prev').onclick = () => go(-1); $('next').onclick = () => go(1);
+}
+function vcPick(k, step, n) {
+  const it = vcItem(k);
+  if (step === 0 && it.pick1 === null) it.pick1 = n;
+  else if (step === 1 && it.pick1 !== null && it.pick2 === null) {
+    it.pick2 = n;
+    const ok = it.first[it.pick1].ok && it.second[n].ok;
+    vcMarks[k] = ok ? 1 : 0;
+    if (ok) delete vcWrong[k];
+    else {
+      const parts = []; if (!it.first[it.pick1].ok) parts.push(it.first[it.pick1].t); if (!it.second[n].ok) parts.push(it.second[n].t);
+      vcWrong[k] = parts.join(' / ');
+      const mk = 'vc:' + k; missCount[mk] = (missCount[mk] || 0) + 1; store.set('gj-miss', missCount);
+    }
+    store.set('gj-vc', vcMarks); store.set('gj-vcw', vcWrong);
+  } else return;
+  renderVc(); stats(); updateCnt();
+}
+
 function render() {
+  ['tr', 'vc', 'dz', 'note'].forEach(k => { if (k !== tab) $('view-' + k).innerHTML = ''; });
+  $('view-vc').hidden = tab !== 'vc';
+  $('lbl-dir').hidden = tab !== 'vc' || $('opt-retry').checked;
+  $('lbl-dir').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.d === vcDir)));
   $('view-tr').hidden = tab !== 'tr'; $('view-dz').hidden = tab !== 'dz'; $('view-note').hidden = tab !== 'note';
   $('opts').hidden = $('progress').hidden = tab === 'note';
   $('lbl-hint').hidden = tab !== 'tr';
@@ -309,7 +425,7 @@ function render() {
   $('pos').textContent = n ? `${idx + 1} / ${n}` : '0 / 0';
   $('prog').style.width = n ? ((idx + 1) / n * 100) + '%' : '0';
   openGloss.clear();
-  tab === 'tr' ? renderTr() : renderDz();
+  tab === 'tr' ? renderTr() : tab === 'vc' ? renderVc() : renderDz();
   stats();
 }
 function go(d) {
@@ -323,6 +439,9 @@ function stats() {
     const c = { ok: 0, mid: 0, bad: 0 }; ids.forEach(id => marks[id] && c[marks[id]]++);
     $('stats').innerHTML = `<span>채점 <b>${c.ok + c.mid + c.bad}</b>/${ids.length}</span><span>맞음 <b>${c.ok}</b></span><span>애매 <b>${c.mid}</b></span><span>다시 <b>${c.bad}</b></span><button class="chip" id="reset">채점 기록 지우기</button>`;
     $('reset').onclick = () => { ids.forEach(id => delete marks[id]); store.set('gj-marks', marks); render(); };
+  } else if (tab === 'vc') {
+    let r = 0, w = 0; order.forEach(k => { if (vcMarks[k] === 1) r++; else if (vcMarks[k] === 0) w++; });
+    $('stats').innerHTML = `<span>푼 문제 <b>${r + w}</b>/${order.length}</span><span>정답 <b>${r}</b></span><span>오답 <b>${w}</b></span>`;
   } else {
     const ids = order; let r = 0, w = 0; ids.forEach(i => { if (dzMarks[i] === 1) r++; else if (dzMarks[i] === 0) w++; });
     $('stats').innerHTML = `<span>푼 문제 <b>${r + w}</b>/${ids.length}</span><span>정답 <b>${r}</b></span><span>오답 <b>${w}</b></span>`;
@@ -331,12 +450,13 @@ function stats() {
 
 function trMisses() { return ALL.filter(s => (filter === 'all' || s.key === filter) && (marks[s.id] === 'bad' || marks[s.id] === 'mid')); }
 function dzMisses() { return DZ.map((q, i) => i).filter(i => (filter === 'all' || DZ[i].key === filter) && dzMarks[i] === 0); }
+function vcMisses() { return Object.keys(vcMarks).filter(k => vcMarks[k] === 0 && WORDS[+k.split(':')[0]] && (filter === 'all' || WORDS[+k.split(':')[0]].key === filter)); }
 function updateCnt() {
-  const n = ALL.filter(s => marks[s.id] === 'bad' || marks[s.id] === 'mid').length + DZ.filter((q, i) => dzMarks[i] === 0).length;
+  const n = ALL.filter(s => marks[s.id] === 'bad' || marks[s.id] === 'mid').length + DZ.filter((q, i) => dzMarks[i] === 0).length + Object.values(vcMarks).filter(x => x === 0).length;
   $('cnt').textContent = n ? n : '';
 }
 function renderNote() {
-  const tr = trMisses(), dz = dzMisses();
+  const tr = trMisses(), dz = dzMisses(), vc = vcMisses();
   const times = k => missCount[k] ? `틀린 횟수 ${missCount[k]}` : '';
   const trHTML = tr.map(s => `
     <div class="nitem ${marks[s.id]}">
@@ -357,28 +477,43 @@ function renderNote() {
       <div class="foot"><span><span class="zh">${esc(q.title)}</span>${times('dz:' + i) ? ' · ' + times('dz:' + i) : ''}</span>
         <button class="btn sm" data-done-dz="${i}">외웠어요</button></div>
     </div>`; }).join('');
+  const vcHTML = vc.map(k => { const [i, d] = k.split(':'); const w = WORDS[+i]; const title = (DATA.find(t => t.key === w.key) || {}).title || w.key;
+    return `
+    <div class="nitem">
+      <div class="row"><span class="zh" style="font-family:var(--f-zh);font-size:22px;margin-right:8px">${esc(w.hz)}</span><span class="py">${esc(w.py)}</span></div>
+      <div class="row"><span class="lbl">뜻</span>${esc(w.kr)}</div>
+      ${vcWrong[k] ? `<div class="row"><span class="lbl">내 답</span><span class="mine">${esc(vcWrong[k])}</span></div>` : ''}
+      <div class="foot"><span><span class="zh">${esc(title)}</span> · ${d === 'zk' ? '중→한' : '한→중'}${times('vc:' + k) ? ' · ' + times('vc:' + k) : ''}</span>
+        <button class="btn sm" data-done-vc="${k}">외웠어요</button></div>
+    </div>`; }).join('');
   $('view-note').innerHTML = `
     <div class="wrap" style="gap:12px">
       <div class="note-head"><h2>해석 오답<small>${tr.length}</small></h2>${tr.length ? '<button class="btn primary" id="retry-tr">해석 오답만 다시 풀기</button>' : ''}</div>
       <div class="nlist">${trHTML || '<div class="empty card">해석 오답이 없습니다. 문장 해석에서 ‘애매’나 ‘다시’를 누르면 여기에 모입니다.</div>'}</div>
+      <div class="note-head" style="margin-top:10px"><h2>단어 오답<small>${vc.length}</small></h2>${vc.length ? '<button class="btn primary" id="retry-vc">단어 오답만 다시 풀기</button>' : ''}</div>
+      <div class="nlist">${vcHTML || '<div class="empty card">단어 오답이 없습니다. 단어 문제에서 틀린 단어가 여기에 모입니다.</div>'}</div>
       <div class="note-head" style="margin-top:10px"><h2>다음자 오답<small>${dz.length}</small></h2>${dz.length ? '<button class="btn primary" id="retry-dz">다음자 오답만 다시 풀기</button>' : ''}</div>
       <div class="nlist">${dzHTML || '<div class="empty card">다음자 오답이 없습니다. 다음자 퀴즈에서 틀린 문제가 여기에 모입니다.</div>'}</div>
     </div>`;
   if ($('retry-tr')) $('retry-tr').onclick = () => { $('opt-retry').checked = true; setTab('tr'); };
+  if ($('retry-vc')) $('retry-vc').onclick = () => { $('opt-retry').checked = true; setTab('vc'); };
+  document.querySelectorAll('[data-done-vc]').forEach(b => b.onclick = () => { const k = b.dataset.doneVc; vcMarks[k] = 1; delete vcWrong[k]; store.set('gj-vc', vcMarks); store.set('gj-vcw', vcWrong); render(); });
   if ($('retry-dz')) $('retry-dz').onclick = () => { $('opt-retry').checked = true; setTab('dz'); };
   document.querySelectorAll('[data-done-tr]').forEach(b => b.onclick = () => { marks[b.dataset.doneTr] = 'ok'; store.set('gj-marks', marks); render(); });
   document.querySelectorAll('[data-done-dz]').forEach(b => b.onclick = () => { const i = b.dataset.doneDz; dzMarks[i] = 1; delete dzWrong[i]; store.set('gj-dz', dzMarks); store.set('gj-dzw', dzWrong); render(); });
 }
 function setTab(t) {
-  tab = t;
-  ['tr', 'dz', 'note'].forEach(k => $('tab-' + k).setAttribute('aria-selected', String(k === t)));
-  rebuild();
+  tab = t; Object.keys(vcCache).forEach(k => delete vcCache[k]);
+  ['tr', 'vc', 'dz', 'note'].forEach(k => $('tab-' + k).setAttribute('aria-selected', String(k === t)));
+  buildFilters(); rebuild();
 }
 
 document.addEventListener('keydown', e => {
   const t = e.target.tagName; if (t === 'TEXTAREA' || t === 'INPUT' || tab === 'note') return;
   if (e.key === 'ArrowRight') go(1);
   else if (e.key === 'ArrowLeft') go(-1);
+  else if (tab === 'vc' && ['1', '2', '3', '4'].includes(e.key) && order.length) { const it = vcItem(order[idx]); if (it.pick1 === null) vcPick(order[idx], 0, +e.key - 1); else if (it.pick2 === null) vcPick(order[idx], 1, +e.key - 1); }
+  else if (tab === 'vc' && e.key === 'Enter' && t !== 'BUTTON' && order.length && vcItem(order[idx]).pick2 !== null) go(1);
   else if (tab === 'tr' && revealed && ['1', '2', '3'].includes(e.key)) grade(order[idx], ['ok', 'mid', 'bad'][+e.key - 1]);
   else if (tab === 'tr' && !revealed && (e.key === ' ' || e.key === 'Enter') && t !== 'BUTTON') { e.preventDefault(); reveal(); }
 });
@@ -386,9 +521,11 @@ document.addEventListener('keydown', e => {
 $('opt-hint').onchange = () => render();
 $('tab-tr').onclick = () => setTab('tr');
 $('tab-dz').onclick = () => setTab('dz');
+$('tab-vc').onclick = () => setTab('vc');
+$('lbl-dir').querySelectorAll('button').forEach(b => b.onclick = () => { vcDir = b.dataset.d; store.set('gj-vcdir', vcDir); Object.keys(vcCache).forEach(k => delete vcCache[k]); rebuild(); });
 $('tab-note').onclick = () => setTab('note');
 
-const WORDS = [{"hz": "养生", "py": "yǎngshēng", "kr": "양생하다, 몸을 보양하며 건강을 돌보다"}, {"hz": "帷幕", "py": "wéimù", "kr": "장막, 휘장"}, {"hz": "算得上", "py": "suàndeshàng", "kr": "~라고 할 수 있다, ~로 쳐줄 만하다"}, {"hz": "茫茫", "py": "mángmáng", "kr": "끝없이 아득하다, 분명히 보이지 않다"}, {"hz": "崎岖", "py": "qíqū", "kr": "(산길이) 울퉁불퉁 험하다; 처지가 어렵고 힘들다"}, {"hz": "坎坷", "py": "kǎnkě", "kr": "(길·땅이) 울퉁불퉁하다; 불우하여 뜻을 이루지 못하다"}, {"hz": "不幸", "py": "búxìng", "kr": "불행(하다)"}, {"hz": "耄耋", "py": "màodié", "kr": "여든·아흔 살 정도의 나이; 노년"}, {"hz": "幸运", "py": "xìngyùn", "kr": "행운; 뜻대로 되다"}, {"hz": "美味佳肴", "py": "měiwèi jiāyáo", "kr": "맛있고 훌륭한 음식"}, {"hz": "陪伴", "py": "péibàn", "kr": "동반하다, 곁에서 함께하다"}, {"hz": "乏", "py": "fá", "kr": "부족하다, 결핍되다"}, {"hz": "咨询", "py": "zīxún", "kr": "자문하다, 의견을 구하다"}, {"hz": "保健", "py": "bǎojiàn", "kr": "보건(하다), 건강을 지키다"}, {"hz": "秘诀", "py": "mìjué", "kr": "비결"}, {"hz": "坦率", "py": "tǎnshuài", "kr": "솔직하다, 거리낌 없다"}, {"hz": "真诚", "py": "zhēnchéng", "kr": "진실하고 성실하다"}, {"hz": "启示", "py": "qǐshì", "kr": "시사, 깨우침"}, {"hz": "欲望", "py": "yùwàng", "kr": "욕망"}, {"hz": "明知", "py": "míngzhī", "kr": "뻔히 알면서, 분명히 알고도"}, {"hz": "艰险", "py": "jiānxiǎn", "kr": "어려움과 위험, 험난함"}, {"hz": "冒险", "py": "màoxiǎn", "kr": "모험하다, 위험을 무릅쓰다"}, {"hz": "扁舟", "py": "piānzhōu", "kr": "작은 배, 조각배"}, {"hz": "萎缩", "py": "wěisuō", "kr": "시들어 오그라들다; 기능이 쇠퇴하다"}, {"hz": "搏斗", "py": "bódòu", "kr": "격투하다, 치열하게 싸우다"}, {"hz": "演示", "py": "yǎnshì", "kr": "시연하다, (실물·도표로) 보여 주다"}, {"hz": "自律", "py": "zìlǜ", "kr": "자율(하다), 스스로를 규제하다"}, {"hz": "符合", "py": "fúhé", "kr": "부합하다, 들어맞다"}, {"hz": "名誉", "py": "míngyù", "kr": "명예, 명성"}, {"hz": "至上", "py": "zhìshàng", "kr": "가장 높다, 최고이다"}, {"hz": "虔敬", "py": "qiánjìng", "kr": "경건하고 공손하다"}, {"hz": "坦荡", "py": "tǎndàng", "kr": "마음이 깨끗하고 넓다"}, {"hz": "豁达", "py": "huòdá", "kr": "성격이 활달하다; 도량이 넓다"}, {"hz": "名利", "py": "mínglì", "kr": "명예와 이익"}, {"hz": "得失", "py": "déshī", "kr": "얻음과 잃음; 성공과 실패"}, {"hz": "自在", "py": "zìzài", "kr": "자유롭다, 구속받지 않다"}, {"hz": "逍遥", "py": "xiāoyáo", "kr": "구속 없이 자유롭고 한가롭다"}, {"hz": "助人为乐", "py": "zhùrén wéilè", "kr": "남을 돕는 것을 즐거움으로 삼다"}, {"hz": "秉承", "py": "bǐngchéng", "kr": "(뜻이나 지시를) 이어받다, 받들다"}, {"hz": "胸怀", "py": "xiōnghuái", "kr": "가슴, 흉금; 마음에 품은 뜻"}, {"hz": "心境", "py": "xīnjìng", "kr": "심경, 마음 상태"}, {"hz": "博大", "py": "bódà", "kr": "넓고 크다; 풍부하다"}, {"hz": "驼背", "py": "tuóbèi", "kr": "곱사등, 등이 굽음"}, {"hz": "喟叹", "py": "kuìtàn", "kr": "탄식하다, 한숨 쉬다"}, {"hz": "日薄西山", "py": "rìbó xīshān", "kr": "해가 서산에 가까워지다 — 늙고 쇠약하여 종말에 가까움"}, {"hz": "气息奄奄", "py": "qìxī yǎnyǎn", "kr": "숨이 곧 끊어질 듯하다"}, {"hz": "暮年", "py": "mùnián", "kr": "만년, 노년"}, {"hz": "术语", "py": "shùyǔ", "kr": "전문 용어, 술어"}, {"hz": "意念", "py": "yìniàn", "kr": "생각, 마음속 의도"}, {"hz": "摒弃", "py": "bǐngqì", "kr": "버리다, 내팽개치다"}, {"hz": "休止", "py": "xiūzhǐ", "kr": "멈추다, 중지하다"}, {"hz": "瞬间", "py": "shùnjiān", "kr": "순간, 눈 깜짝할 사이"}, {"hz": "利益", "py": "lìyì", "kr": "이익, 이로운 점"}, {"hz": "摒除", "py": "bǐngchú", "kr": "배제하다, 없애다; 버리다"}, {"hz": "功名", "py": "gōngmíng", "kr": "공명 (과거 급제·관직·명성)"}, {"hz": "利禄", "py": "lìlù", "kr": "이록 (관리의 재물과 봉록)"}, {"hz": "洗涤", "py": "xǐdí", "kr": "씻다, 세척하다"}, {"hz": "迷蒙", "py": "míméng", "kr": "흐릿하다, 어렴풋하다"}, {"hz": "以致", "py": "yǐzhì", "kr": "~한 결과가 되다 (주로 좋지 않은 결과)"}, {"hz": "依稀", "py": "yīxī", "kr": "어렴풋하다, 희미하다"}, {"hz": "充溢", "py": "chōngyì", "kr": "가득 차 넘치다"}, {"hz": "回旋", "py": "huíxuán", "kr": "맴돌다, 선회하다"}, {"hz": "潜流", "py": "qiánliú", "kr": "저류, 물밑에 흐르는 물결(내면의 감정)"}, {"hz": "漩涡", "py": "xuánwō", "kr": "소용돌이"}, {"hz": "沉淀", "py": "chéndiàn", "kr": "가라앉다, 침전하다"}, {"hz": "落空", "py": "luòkōng", "kr": "수포로 돌아가다, 허사가 되다"}, {"hz": "企盼", "py": "qǐpàn", "kr": "간절히 바라다, 갈망하다"}, {"hz": "夺眶而出", "py": "duókuàng ér chū", "kr": "(눈물이) 왈칵 쏟아져 나오다"}, {"hz": "衣襟", "py": "yījīn", "kr": "옷깃, 옷섶(옷의 앞자락)"}, {"hz": "自制", "py": "zìzhì", "kr": "자제하다, 스스로 억제하다"}, {"hz": "颤栗", "py": "zhànlì", "kr": "전율하다, 부들부들 떨다"}, {"hz": "触发", "py": "chùfā", "kr": "(감정·반응 등을) 촉발하다, 불러일으키다"}, {"hz": "凝聚", "py": "níngjù", "kr": "응집하다, 한데 모이다"}, {"hz": "招引", "py": "zhāoyǐn", "kr": "불러들이다, 끌어당기다"}, {"hz": "晦暗", "py": "huì'àn", "kr": "어둑하다, 어두컴컴하다"}, {"hz": "忍俊不禁", "py": "rěnjùn bùjīn", "kr": "참지 못하고 웃음이 터지다 (여기서는 감정을 억누르지 못함)"}, {"hz": "苦乐交加", "py": "kǔlè jiāojiā", "kr": "괴로움과 즐거움이 뒤섞이다"}, {"hz": "起浪头", "py": "qǐ làngtou", "kr": "물결(파도)을 일으키다"}, {"hz": "忽悠", "py": "hūyou", "kr": "흔들흔들하다, 하늘하늘 흔들리다"}, {"hz": "崭新", "py": "zhǎnxīn", "kr": "아주 새롭다"}, {"hz": "飘落", "py": "piāoluò", "kr": "흩날리며 떨어지다"}, {"hz": "无足轻重", "py": "wúzú qīngzhòng", "kr": "대수롭지 않다, 중요하지 않다"}, {"hz": "流连", "py": "liúlián", "kr": "떠나기 아쉬워 머물다"}, {"hz": "苦涩", "py": "kǔsè", "kr": "쓰고 떫다, 괴롭고 씁쓸하다"}, {"hz": "怜惜", "py": "liánxī", "kr": "불쌍히 여겨 아끼다, 애석해하다"}, {"hz": "蓦然", "py": "mòrán", "kr": "갑자기, 불현듯"}, {"hz": "翻江倒海", "py": "fānjiāng dǎohǎi", "kr": "(기세가) 강과 바다가 뒤집힐 듯 엄청나다"}, {"hz": "斑驳", "py": "bānbó", "kr": "얼룩덜룩하다"}, {"hz": "贪婪", "py": "tānlán", "kr": "탐욕스럽다 (여기서는 한껏 누리는 모습)"}, {"hz": "发泄", "py": "fāxiè", "kr": "(감정을) 털어놓다, 발산하다"}, {"hz": "倘若", "py": "tǎngruò", "kr": "만약, 만일"}, {"hz": "原素", "py": "yuánsù", "kr": "원소 (元素의 옛 표기)"}, {"hz": "哭丧着脸", "py": "kūsang zhe liǎn", "kr": "울상을 짓다"}, {"hz": "消遣", "py": "xiāoqiǎn", "kr": "소일하다, 심심풀이로 즐기다"}, {"hz": "承认", "py": "chéngrèn", "kr": "인정하다, 시인하다"}, {"hz": "切勿", "py": "qièwù", "kr": "절대 ~하지 마라"}, {"hz": "排斥", "py": "páichì", "kr": "배척하다, 물리치다"}, {"hz": "提倡", "py": "tíchàng", "kr": "장려하다, 주창하다"}, {"hz": "领略", "py": "lǐnglüè", "kr": "맛보고 깨닫다, 음미하다"}, {"hz": "抛却", "py": "pāoquè", "kr": "내던지다, 버리다"}, {"hz": "脱离", "py": "tuōlí", "kr": "벗어나다, 관계를 끊다"}, {"hz": "或者", "py": "huòzhě", "kr": "혹은, 또는"}, {"hz": "掉弄玄虚", "py": "diàonòng xuánxū", "kr": "허황된 말이나 수작으로 남을 현혹하다"}, {"hz": "上瘾", "py": "shàngyǐn", "kr": "중독되다, 버릇이 되다"}, {"hz": "阁", "py": "gē", "kr": "(= 搁) 내버려 두다, 묵혀 두다"}, {"hz": "生锈", "py": "shēngxiù", "kr": "녹슬다"}, {"hz": "发痒", "py": "fāyǎng", "kr": "가렵다, 근질근질하다"}, {"hz": "胃口", "py": "wèikǒu", "kr": "식욕, 입맛; 흥미·의욕"}, {"hz": "剥夺", "py": "bōduó", "kr": "박탈하다, 빼앗다"}, {"hz": "得着", "py": "dézháo", "kr": "얻다, 손에 넣다"}, {"hz": "脾胃", "py": "píwèi", "kr": "비위, 성미·취향"}, {"hz": "欲罢不能", "py": "yùbà bùnéng", "kr": "그만두려 해도 그만둘 수 없다"}, {"hz": "摩擦", "py": "mócā", "kr": "마찰하다; 서로 부딪쳐 자극을 주다"}, {"hz": "停摆", "py": "tíngbǎi", "kr": "(시계추가 멈추듯) 작동이 멈추다"}, {"hz": "仰赖", "py": "yǎnglài", "kr": "의지하다, 기대다"}, {"hz": "扶持", "py": "fúchí", "kr": "돕다, 뒷받침하다"}, {"hz": "蚀本", "py": "shíběn", "kr": "밑지다, 손해를 보다"}, {"hz": "野人献曝", "py": "yěrén xiànpù", "kr": "보잘것없는 것을 정성껏 권함 (겸양 표현)"}, {"hz": "缠", "py": "chán", "kr": "달라붙다, 졸라 대다"}, {"hz": "款款地", "py": "kuǎnkuǎn de", "kr": "천천히, 살며시, 느긋하게"}, {"hz": "屏气儿", "py": "bǐngqìr", "kr": "숨을 죽이다"}, {"hz": "生怕", "py": "shēngpà", "kr": "~할까 봐 몹시 걱정하다"}, {"hz": "末了", "py": "mòliǎo", "kr": "마지막에, 끝에 가서"}, {"hz": "累累", "py": "léiléi", "kr": "주렁주렁 맺힌 모양"}, {"hz": "骨朵儿", "py": "gūduor", "kr": "꽃봉오리"}, {"hz": "面面相觑", "py": "miànmiàn xiāngqù", "kr": "서로 얼굴만 쳐다보다"}, {"hz": "倏忽", "py": "shūhū", "kr": "순식간에, 눈 깜짝할 사이에"}, {"hz": "袅袅", "py": "niǎoniǎo", "kr": "(연기·향기 등이) 하늘하늘 피어오르는 모양"}, {"hz": "锨刃", "py": "xiānrèn", "kr": "삽날"}, {"hz": "光辉", "py": "guānghuī", "kr": "찬란한 빛, 광채"}, {"hz": "尘埃", "py": "chén'āi", "kr": "먼지, 티끌"}, {"hz": "蝉", "py": "chán", "kr": "매미"}, {"hz": "妥协", "py": "tuǒxié", "kr": "타협하다"}, {"hz": "梗", "py": "gěng", "kr": "(목 등을) 꼿꼿이 세우다, 뻣뻣하게 하다"}, {"hz": "奠定", "py": "diàndìng", "kr": "(기초를) 다지다, 확립하다"}, {"hz": "舟", "py": "zhōu", "kr": "배, 작은 배"}, {"hz": "鉴定", "py": "jiàndìng", "kr": "감정하다, 평가·판정하다"}, {"hz": "储蓄", "py": "chǔxù", "kr": "저축하다"}, {"hz": "概念", "py": "gàiniàn", "kr": "개념"}, {"hz": "庸俗", "py": "yōngsú", "kr": "저속하다, 속되다"}, {"hz": "款", "py": "kuǎn", "kr": "(양) 종류, 스타일 (상품 모델을 세는 단위)"}, {"hz": "储存", "py": "chǔcún", "kr": "저장하다, 쌓아 두다"}, {"hz": "筹备", "py": "chóubèi", "kr": "준비하다, 사전에 기획·마련하다"}, {"hz": "貂", "py": "diāo", "kr": "담비"}, {"hz": "模式", "py": "móshì", "kr": "모델, 패턴, 양식"}, {"hz": "大抵", "py": "dàdǐ", "kr": "대체로, 대개"}];
+const WORDS = [{"hz": "养生", "py": "yǎngshēng", "kr": "양생하다, 몸을 보양하며 건강을 돌보다", "key": "气功养生"}, {"hz": "帷幕", "py": "wéimù", "kr": "장막, 휘장", "key": "气功养生"}, {"hz": "算得上", "py": "suàndeshàng", "kr": "~라고 할 수 있다, ~로 쳐줄 만하다", "key": "气功养生"}, {"hz": "茫茫", "py": "mángmáng", "kr": "끝없이 아득하다, 분명히 보이지 않다", "key": "气功养生"}, {"hz": "崎岖", "py": "qíqū", "kr": "(산길이) 울퉁불퉁 험하다; 처지가 어렵고 힘들다", "key": "气功养生"}, {"hz": "坎坷", "py": "kǎnkě", "kr": "(길·땅이) 울퉁불퉁하다; 불우하여 뜻을 이루지 못하다", "key": "气功养生"}, {"hz": "不幸", "py": "búxìng", "kr": "불행(하다)", "key": "气功养生"}, {"hz": "耄耋", "py": "màodié", "kr": "여든·아흔 살 정도의 나이; 노년", "key": "气功养生"}, {"hz": "幸运", "py": "xìngyùn", "kr": "행운; 뜻대로 되다", "key": "气功养生"}, {"hz": "美味佳肴", "py": "měiwèi jiāyáo", "kr": "맛있고 훌륭한 음식", "key": "气功养生"}, {"hz": "陪伴", "py": "péibàn", "kr": "동반하다, 곁에서 함께하다", "key": "气功养生"}, {"hz": "乏", "py": "fá", "kr": "부족하다, 결핍되다", "key": "气功养生"}, {"hz": "咨询", "py": "zīxún", "kr": "자문하다, 의견을 구하다", "key": "气功养生"}, {"hz": "保健", "py": "bǎojiàn", "kr": "보건(하다), 건강을 지키다", "key": "气功养生"}, {"hz": "秘诀", "py": "mìjué", "kr": "비결", "key": "气功养生"}, {"hz": "坦率", "py": "tǎnshuài", "kr": "솔직하다, 거리낌 없다", "key": "气功养生"}, {"hz": "真诚", "py": "zhēnchéng", "kr": "진실하고 성실하다", "key": "气功养生"}, {"hz": "启示", "py": "qǐshì", "kr": "시사, 깨우침", "key": "气功养生"}, {"hz": "欲望", "py": "yùwàng", "kr": "욕망", "key": "气功养生"}, {"hz": "明知", "py": "míngzhī", "kr": "뻔히 알면서, 분명히 알고도", "key": "气功养生"}, {"hz": "艰险", "py": "jiānxiǎn", "kr": "어려움과 위험, 험난함", "key": "气功养生"}, {"hz": "冒险", "py": "màoxiǎn", "kr": "모험하다, 위험을 무릅쓰다", "key": "气功养生"}, {"hz": "扁舟", "py": "piānzhōu", "kr": "작은 배, 조각배", "key": "气功养生"}, {"hz": "萎缩", "py": "wěisuō", "kr": "시들어 오그라들다; 기능이 쇠퇴하다", "key": "气功养生"}, {"hz": "搏斗", "py": "bódòu", "kr": "격투하다, 치열하게 싸우다", "key": "气功养生"}, {"hz": "演示", "py": "yǎnshì", "kr": "시연하다, (실물·도표로) 보여 주다", "key": "气功养生"}, {"hz": "自律", "py": "zìlǜ", "kr": "자율(하다), 스스로를 규제하다", "key": "气功养生"}, {"hz": "符合", "py": "fúhé", "kr": "부합하다, 들어맞다", "key": "气功养生"}, {"hz": "名誉", "py": "míngyù", "kr": "명예, 명성", "key": "气功养生"}, {"hz": "至上", "py": "zhìshàng", "kr": "가장 높다, 최고이다", "key": "气功养生"}, {"hz": "虔敬", "py": "qiánjìng", "kr": "경건하고 공손하다", "key": "气功养生"}, {"hz": "坦荡", "py": "tǎndàng", "kr": "마음이 깨끗하고 넓다", "key": "气功养生"}, {"hz": "豁达", "py": "huòdá", "kr": "성격이 활달하다; 도량이 넓다", "key": "气功养生"}, {"hz": "名利", "py": "mínglì", "kr": "명예와 이익", "key": "气功养生"}, {"hz": "得失", "py": "déshī", "kr": "얻음과 잃음; 성공과 실패", "key": "气功养生"}, {"hz": "自在", "py": "zìzài", "kr": "자유롭다, 구속받지 않다", "key": "气功养生"}, {"hz": "逍遥", "py": "xiāoyáo", "kr": "구속 없이 자유롭고 한가롭다", "key": "气功养生"}, {"hz": "助人为乐", "py": "zhùrén wéilè", "kr": "남을 돕는 것을 즐거움으로 삼다", "key": "气功养生"}, {"hz": "秉承", "py": "bǐngchéng", "kr": "(뜻이나 지시를) 이어받다, 받들다", "key": "气功养生"}, {"hz": "胸怀", "py": "xiōnghuái", "kr": "가슴, 흉금; 마음에 품은 뜻", "key": "气功养生"}, {"hz": "心境", "py": "xīnjìng", "kr": "심경, 마음 상태", "key": "气功养生"}, {"hz": "博大", "py": "bódà", "kr": "넓고 크다; 풍부하다", "key": "气功养生"}, {"hz": "驼背", "py": "tuóbèi", "kr": "곱사등, 등이 굽음", "key": "气功养生"}, {"hz": "喟叹", "py": "kuìtàn", "kr": "탄식하다, 한숨 쉬다", "key": "气功养生"}, {"hz": "日薄西山", "py": "rìbó xīshān", "kr": "해가 서산에 가까워지다 — 늙고 쇠약하여 종말에 가까움", "key": "气功养生"}, {"hz": "气息奄奄", "py": "qìxī yǎnyǎn", "kr": "숨이 곧 끊어질 듯하다", "key": "气功养生"}, {"hz": "暮年", "py": "mùnián", "kr": "만년, 노년", "key": "气功养生"}, {"hz": "术语", "py": "shùyǔ", "kr": "전문 용어, 술어", "key": "气功养生"}, {"hz": "意念", "py": "yìniàn", "kr": "생각, 마음속 의도", "key": "气功养生"}, {"hz": "摒弃", "py": "bǐngqì", "kr": "버리다, 내팽개치다", "key": "气功养生"}, {"hz": "休止", "py": "xiūzhǐ", "kr": "멈추다, 중지하다", "key": "气功养生"}, {"hz": "瞬间", "py": "shùnjiān", "kr": "순간, 눈 깜짝할 사이", "key": "气功养生"}, {"hz": "利益", "py": "lìyì", "kr": "이익, 이로운 점", "key": "气功养生"}, {"hz": "摒除", "py": "bǐngchú", "kr": "배제하다, 없애다; 버리다", "key": "气功养生"}, {"hz": "功名", "py": "gōngmíng", "kr": "공명 (과거 급제·관직·명성)", "key": "气功养生"}, {"hz": "利禄", "py": "lìlù", "kr": "이록 (관리의 재물과 봉록)", "key": "气功养生"}, {"hz": "洗涤", "py": "xǐdí", "kr": "씻다, 세척하다", "key": "气功养生"}, {"hz": "迷蒙", "py": "míméng", "kr": "흐릿하다, 어렴풋하다", "key": "感觉"}, {"hz": "以致", "py": "yǐzhì", "kr": "~한 결과가 되다 (주로 좋지 않은 결과)", "key": "感觉"}, {"hz": "依稀", "py": "yīxī", "kr": "어렴풋하다, 희미하다", "key": "感觉"}, {"hz": "充溢", "py": "chōngyì", "kr": "가득 차 넘치다", "key": "感觉"}, {"hz": "回旋", "py": "huíxuán", "kr": "맴돌다, 선회하다", "key": "感觉"}, {"hz": "潜流", "py": "qiánliú", "kr": "저류, 물밑에 흐르는 물결(내면의 감정)", "key": "感觉"}, {"hz": "漩涡", "py": "xuánwō", "kr": "소용돌이", "key": "感觉"}, {"hz": "沉淀", "py": "chéndiàn", "kr": "가라앉다, 침전하다", "key": "感觉"}, {"hz": "落空", "py": "luòkōng", "kr": "수포로 돌아가다, 허사가 되다", "key": "感觉"}, {"hz": "企盼", "py": "qǐpàn", "kr": "간절히 바라다, 갈망하다", "key": "感觉"}, {"hz": "夺眶而出", "py": "duókuàng ér chū", "kr": "(눈물이) 왈칵 쏟아져 나오다", "key": "感觉"}, {"hz": "衣襟", "py": "yījīn", "kr": "옷깃, 옷섶(옷의 앞자락)", "key": "感觉"}, {"hz": "自制", "py": "zìzhì", "kr": "자제하다, 스스로 억제하다", "key": "感觉"}, {"hz": "颤栗", "py": "zhànlì", "kr": "전율하다, 부들부들 떨다", "key": "感觉"}, {"hz": "触发", "py": "chùfā", "kr": "(감정·반응 등을) 촉발하다, 불러일으키다", "key": "感觉"}, {"hz": "凝聚", "py": "níngjù", "kr": "응집하다, 한데 모이다", "key": "感觉"}, {"hz": "招引", "py": "zhāoyǐn", "kr": "불러들이다, 끌어당기다", "key": "感觉"}, {"hz": "晦暗", "py": "huì'àn", "kr": "어둑하다, 어두컴컴하다", "key": "感觉"}, {"hz": "忍俊不禁", "py": "rěnjùn bùjīn", "kr": "참지 못하고 웃음이 터지다 (여기서는 감정을 억누르지 못함)", "key": "感觉"}, {"hz": "苦乐交加", "py": "kǔlè jiāojiā", "kr": "괴로움과 즐거움이 뒤섞이다", "key": "感觉"}, {"hz": "起浪头", "py": "qǐ làngtou", "kr": "물결(파도)을 일으키다", "key": "感觉"}, {"hz": "忽悠", "py": "hūyou", "kr": "흔들흔들하다, 하늘하늘 흔들리다", "key": "感觉"}, {"hz": "崭新", "py": "zhǎnxīn", "kr": "아주 새롭다", "key": "感觉"}, {"hz": "飘落", "py": "piāoluò", "kr": "흩날리며 떨어지다", "key": "感觉"}, {"hz": "无足轻重", "py": "wúzú qīngzhòng", "kr": "대수롭지 않다, 중요하지 않다", "key": "感觉"}, {"hz": "流连", "py": "liúlián", "kr": "떠나기 아쉬워 머물다", "key": "感觉"}, {"hz": "苦涩", "py": "kǔsè", "kr": "쓰고 떫다, 괴롭고 씁쓸하다", "key": "感觉"}, {"hz": "怜惜", "py": "liánxī", "kr": "불쌍히 여겨 아끼다, 애석해하다", "key": "感觉"}, {"hz": "蓦然", "py": "mòrán", "kr": "갑자기, 불현듯", "key": "感觉"}, {"hz": "翻江倒海", "py": "fānjiāng dǎohǎi", "kr": "(기세가) 강과 바다가 뒤집힐 듯 엄청나다", "key": "感觉"}, {"hz": "斑驳", "py": "bānbó", "kr": "얼룩덜룩하다", "key": "感觉"}, {"hz": "贪婪", "py": "tānlán", "kr": "탐욕스럽다 (여기서는 한껏 누리는 모습)", "key": "感觉"}, {"hz": "发泄", "py": "fāxiè", "kr": "(감정을) 털어놓다, 발산하다", "key": "感觉"}, {"hz": "倘若", "py": "tǎngruò", "kr": "만약, 만일", "key": "学问之趣味"}, {"hz": "原素", "py": "yuánsù", "kr": "원소 (元素의 옛 표기)", "key": "学问之趣味"}, {"hz": "哭丧着脸", "py": "kūsang zhe liǎn", "kr": "울상을 짓다", "key": "学问之趣味"}, {"hz": "消遣", "py": "xiāoqiǎn", "kr": "소일하다, 심심풀이로 즐기다", "key": "学问之趣味"}, {"hz": "承认", "py": "chéngrèn", "kr": "인정하다, 시인하다", "key": "学问之趣味"}, {"hz": "切勿", "py": "qièwù", "kr": "절대 ~하지 마라", "key": "学问之趣味"}, {"hz": "排斥", "py": "páichì", "kr": "배척하다, 물리치다", "key": "学问之趣味"}, {"hz": "提倡", "py": "tíchàng", "kr": "장려하다, 주창하다", "key": "学问之趣味"}, {"hz": "领略", "py": "lǐnglüè", "kr": "맛보고 깨닫다, 음미하다", "key": "学问之趣味"}, {"hz": "抛却", "py": "pāoquè", "kr": "내던지다, 버리다", "key": "学问之趣味"}, {"hz": "脱离", "py": "tuōlí", "kr": "벗어나다, 관계를 끊다", "key": "学问之趣味"}, {"hz": "或者", "py": "huòzhě", "kr": "혹은, 또는", "key": "学问之趣味"}, {"hz": "掉弄玄虚", "py": "diàonòng xuánxū", "kr": "허황된 말이나 수작으로 남을 현혹하다", "key": "学问之趣味"}, {"hz": "上瘾", "py": "shàngyǐn", "kr": "중독되다, 버릇이 되다", "key": "学问之趣味"}, {"hz": "阁", "py": "gē", "kr": "(= 搁) 내버려 두다, 묵혀 두다", "key": "学问之趣味"}, {"hz": "生锈", "py": "shēngxiù", "kr": "녹슬다", "key": "学问之趣味"}, {"hz": "发痒", "py": "fāyǎng", "kr": "가렵다, 근질근질하다", "key": "学问之趣味"}, {"hz": "胃口", "py": "wèikǒu", "kr": "식욕, 입맛; 흥미·의욕", "key": "学问之趣味"}, {"hz": "剥夺", "py": "bōduó", "kr": "박탈하다, 빼앗다", "key": "学问之趣味"}, {"hz": "得着", "py": "dézháo", "kr": "얻다, 손에 넣다", "key": "学问之趣味"}, {"hz": "脾胃", "py": "píwèi", "kr": "비위, 성미·취향", "key": "学问之趣味"}, {"hz": "欲罢不能", "py": "yùbà bùnéng", "kr": "그만두려 해도 그만둘 수 없다", "key": "学问之趣味"}, {"hz": "摩擦", "py": "mócā", "kr": "마찰하다; 서로 부딪쳐 자극을 주다", "key": "学问之趣味"}, {"hz": "停摆", "py": "tíngbǎi", "kr": "(시계추가 멈추듯) 작동이 멈추다", "key": "学问之趣味"}, {"hz": "仰赖", "py": "yǎnglài", "kr": "의지하다, 기대다", "key": "学问之趣味"}, {"hz": "扶持", "py": "fúchí", "kr": "돕다, 뒷받침하다", "key": "学问之趣味"}, {"hz": "蚀本", "py": "shíběn", "kr": "밑지다, 손해를 보다", "key": "学问之趣味"}, {"hz": "野人献曝", "py": "yěrén xiànpù", "kr": "보잘것없는 것을 정성껏 권함 (겸양 표현)", "key": "学问之趣味"}, {"hz": "缠", "py": "chán", "kr": "달라붙다, 졸라 대다", "key": "月迹"}, {"hz": "款款地", "py": "kuǎnkuǎn de", "kr": "천천히, 살며시, 느긋하게", "key": "月迹"}, {"hz": "屏气儿", "py": "bǐngqìr", "kr": "숨을 죽이다", "key": "月迹"}, {"hz": "生怕", "py": "shēngpà", "kr": "~할까 봐 몹시 걱정하다", "key": "月迹"}, {"hz": "末了", "py": "mòliǎo", "kr": "마지막에, 끝에 가서", "key": "月迹"}, {"hz": "累累", "py": "léiléi", "kr": "주렁주렁 맺힌 모양", "key": "月迹"}, {"hz": "骨朵儿", "py": "gūduor", "kr": "꽃봉오리", "key": "月迹"}, {"hz": "面面相觑", "py": "miànmiàn xiāngqù", "kr": "서로 얼굴만 쳐다보다", "key": "月迹"}, {"hz": "倏忽", "py": "shūhū", "kr": "순식간에, 눈 깜짝할 사이에", "key": "月迹"}, {"hz": "袅袅", "py": "niǎoniǎo", "kr": "(연기·향기 등이) 하늘하늘 피어오르는 모양", "key": "月迹"}, {"hz": "锨刃", "py": "xiānrèn", "kr": "삽날", "key": "月迹"}, {"hz": "光辉", "py": "guānghuī", "kr": "찬란한 빛, 광채", "key": "月迹"}, {"hz": "尘埃", "py": "chén'āi", "kr": "먼지, 티끌", "key": "过好日子"}, {"hz": "蝉", "py": "chán", "kr": "매미", "key": "过好日子"}, {"hz": "妥协", "py": "tuǒxié", "kr": "타협하다", "key": "过好日子"}, {"hz": "梗", "py": "gěng", "kr": "(목 등을) 꼿꼿이 세우다, 뻣뻣하게 하다", "key": "过好日子"}, {"hz": "奠定", "py": "diàndìng", "kr": "(기초를) 다지다, 확립하다", "key": "过好日子"}, {"hz": "舟", "py": "zhōu", "kr": "배, 작은 배", "key": "过好日子"}, {"hz": "鉴定", "py": "jiàndìng", "kr": "감정하다, 평가·판정하다", "key": "过好日子"}, {"hz": "储蓄", "py": "chǔxù", "kr": "저축하다", "key": "过好日子"}, {"hz": "概念", "py": "gàiniàn", "kr": "개념", "key": "过好日子"}, {"hz": "庸俗", "py": "yōngsú", "kr": "저속하다, 속되다", "key": "过好日子"}, {"hz": "款", "py": "kuǎn", "kr": "(양) 종류, 스타일 (상품 모델을 세는 단위)", "key": "过好日子"}, {"hz": "储存", "py": "chǔcún", "kr": "저장하다, 쌓아 두다", "key": "过好日子"}, {"hz": "筹备", "py": "chóubèi", "kr": "준비하다, 사전에 기획·마련하다", "key": "过好日子"}, {"hz": "貂", "py": "diāo", "kr": "담비", "key": "过好日子"}, {"hz": "模式", "py": "móshì", "kr": "모델, 패턴, 양식", "key": "过好日子"}, {"hz": "大抵", "py": "dàdǐ", "kr": "대체로, 대개", "key": "过好日子"}];
 buildFilters(); rebuild();
 </script>
 
